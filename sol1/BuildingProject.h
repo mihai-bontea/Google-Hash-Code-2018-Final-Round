@@ -4,6 +4,12 @@
 
 #define MAX_TYPES_UTILITY 200
 
+enum class ProjectType{
+    Residential,
+    Utility,
+    Unknown
+};
+
 struct BuildingProject {
     const int height, width, id;
     const std::vector<std::pair<int, int>> walls;
@@ -14,6 +20,11 @@ struct BuildingProject {
     , id(id)
     , walls(std::move(walls))
     {}
+
+    [[nodiscard]] virtual ProjectType get_type() const
+    {
+        return ProjectType::Unknown;
+    }
 
     virtual ~BuildingProject() = default;
 };
@@ -28,6 +39,11 @@ struct Residential : public BuildingProject{
     {
         util_type_to_ids.reserve(MAX_TYPES_UTILITY);
     }
+
+    [[nodiscard]] ProjectType get_type() const override
+    {
+        return ProjectType::Residential;
+    }
 };
 
 struct Utility : public BuildingProject {
@@ -37,4 +53,9 @@ struct Utility : public BuildingProject {
     : BuildingProject(height, width, id, std::move(walls))
     , utility_type(utility_type)
     {}
+
+    [[nodiscard]] ProjectType get_type() const override
+    {
+        return ProjectType::Utility;
+    }
 };
