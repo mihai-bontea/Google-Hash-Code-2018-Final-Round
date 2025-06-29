@@ -57,4 +57,15 @@ public:
             occupant_id[adj_i][adj_j] = building_project->id;
         }
     }
+
+    void remove_building(Point point, BuildingProject* building_project)
+    {
+        for (const auto [i, j] : building_project->walls)
+        {
+            const int adj_i = i + point.first;
+            const int adj_j = j + point.second;
+
+            occupant_id[adj_i][adj_j] = EMPTY;
+        }
+    }
 };
