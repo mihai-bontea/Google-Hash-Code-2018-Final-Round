@@ -38,20 +38,33 @@ public:
         }
     }
 
+    int get_points_by_addition(const Residential& residential)
+    {
+        auto utility_ids_within_range = collision_map.get_utility_ids_in_range(residential);
+        auto utility_types_within_range = get_utility_types(utility_ids_within_range);
+
+        int score_added = utility_types_within_range.size() * residential.nr_residents;
+        return score_added;
+    }
+
     int get_points_by_addition(const BuildingProject& building_project, Point point)
     {
         if (building_project.get_type() == ProjectType::Residential)
         {
-            const auto residential_ptr = dynamic_cast<const Residential*>(&building_project);
+//            const auto residential_ptr = dynamic_cast<const Residential*>(&building_project);
 
-            auto utility_ids_within_range = collision_map.get_utility_ids_in_range(building_project);
-            auto utility_types_within_range = get_utility_types(utility_ids_within_range);
-
-            int score_added = utility_types_within_range.size() * residential_ptr->nr_residents;
+//            auto utility_ids_within_range = collision_map.get_utility_ids_in_range(building_project);
+//            auto utility_types_within_range = get_utility_types(utility_ids_within_range);
+//
+//            int score_added = utility_types_within_range.size() * residential_ptr->nr_residents;
         }
         else
         {
+            const auto utility_ptr = dynamic_cast<const Utility*>(&building_project);
+
             auto residential_ids_within_range = collision_map.get_residential_ids_in_range(building_project);
+
+
         }
     }
 
