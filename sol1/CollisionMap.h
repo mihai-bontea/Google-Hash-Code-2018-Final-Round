@@ -2,8 +2,11 @@
 
 #include <memory>
 #include <cstring>
+#include <unordered_set>
+#include <vector>
 
 #include "BuildingProject.h"
+#include "Data.h"
 
 #define EMPTY (-1)
 
@@ -11,13 +14,16 @@ using Point = std::pair<int, int>;
 
 class CollisionMap
 {
-    int height, width;
+    const Data& data;
+    int height, width, walking_distance;
     std::unique_ptr<std::unique_ptr<int[]>[]> occupant_id;
 
 public:
-    CollisionMap(int height, int width)
-    : height(height)
-    , width(width)
+    explicit CollisionMap(const Data& data)
+    : data(data)
+    , height(data.city_height)
+    , width(data.city_width)
+    , walking_distance(data.max_walking_dist)
     {
         occupant_id = std::make_unique<std::unique_ptr<int[]>[]>(height);
 
@@ -67,5 +73,61 @@ public:
 
             occupant_id[adj_i][adj_j] = EMPTY;
         }
+    }
+
+    std::unordered_set<int> get_all_building_ids_in_range(Point center)
+    {
+        std::unordered_set<int> building_ids;
+
+        for (int i_dist = -walking_distance; i_dist <= walking_distance; ++i_dist)
+        {
+            const int i = center.first + i_dist;
+
+            // Invalid row
+            if (i < 0 || i >= height)
+                continue;
+
+            const int j_limit = walking_distance - abs(i_dist);
+
+            for (int j_dist = -j_limit; j_dist <= j_limit; ++j_dist)
+            {
+                const int j = center.second + j_dist;
+
+                // Invalid column
+                if (j < 0 || j >= width)
+                    continue;
+
+                if (occupant_id[i][j] != EMPTY)
+                    building_ids.insert(occupant_id[i][j]);
+            }
+
+        }
+        return building_ids;
+    }
+
+    std::vector<int> get_residential_ids_in_range(Point center)
+    {
+        const auto all_building_ids = get_all_building_ids_in_range(center);
+        std::vector<int> result;
+
+        for (int id : all_building_ids)
+        {
+            if (data.buildings[id].get().get_type() == ProjectType::Residential)
+                result.push_back(id);
+        }
+        return result;
+    }
+
+    std::vector<int> get_utility_ids_in_range(Point center)
+    {
+        const auto all_building_ids = get_all_building_ids_in_range(center);
+        std::vector<int> result;
+
+        for (int id : all_building_ids)
+        {
+            if (data.buildings[id].get().get_type() == ProjectType::Utility)
+                result.push_back(id);
+        }
+        return result;
     }
 };
