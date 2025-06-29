@@ -1,47 +1,40 @@
 #pragma once
 
-#include <bitset>
+#include <unordered_set>
 
-#define MAX_PROJECT_DIM 50
-#define MAX_PROJECT_AREA 2500
-
-enum class CellType : bool {
-    Empty = false,
-    Wall  = true
-};
+#define MAX_TYPES_UTILITY 200
 
 struct BuildingProject {
-    int height, width, id;
-    std::bitset<MAX_PROJECT_AREA> plan;
+    const int height, width, id;
+    const std::vector<std::pair<int, int>> walls;
 
-    BuildingProject() = default;
-
-    BuildingProject(int height, int width, int id)
-            : height(height), width(width), id(id) {
-        plan.reset();
-    }
-
-    inline CellType at(int row, int col) const {
-        return static_cast<CellType>(plan[row * MAX_PROJECT_DIM + col]);
-    }
-
-    inline void set(int row, int col, CellType value) {
-        plan[row * MAX_PROJECT_DIM + col] = static_cast<bool>(value);
-    }
+    BuildingProject(int height, int width, int id, std::vector<std::pair<int, int>> walls)
+    : height(height)
+    , width(width)
+    , id(id)
+    , walls(std::move(walls))
+    {}
 
     virtual ~BuildingProject() = default;
 };
 
-struct Residential : public BuildingProject {
+struct Residential : public BuildingProject{
     int nr_residents;
+    std::vector<std::unordered_set<int>> util_type_to_ids;
 
-    Residential(int height, int width, int id, int nr_residents)
-            : BuildingProject(height, width, id), nr_residents(nr_residents) {}
+    Residential(int height, int width, int id, int nr_residents, std::vector<std::pair<int, int>> walls)
+    : BuildingProject(height, width, id, std::move(walls))
+    , nr_residents(nr_residents)
+    {
+        util_type_to_ids.reserve(MAX_TYPES_UTILITY);
+    }
 };
 
 struct Utility : public BuildingProject {
     int utility_type;
 
-    Utility(int height, int width, int id, int utility_type)
-            : BuildingProject(height, width, id), utility_type(utility_type) {}
+    Utility(int height, int width, int id, int utility_type, std::vector<std::pair<int, int>> walls)
+    : BuildingProject(height, width, id, std::move(walls))
+    , utility_type(utility_type)
+    {}
 };
