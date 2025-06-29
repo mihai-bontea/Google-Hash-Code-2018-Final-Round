@@ -12,11 +12,52 @@
 
 using Point = std::pair<int, int>;
 
+struct pair_hash {
+    std::size_t operator()(const Point & p) const noexcept {
+        return std::hash<int>{}(p.first) ^ (std::hash<int>{}(p.second) << 1);
+    }
+};
+
 class CollisionMap
 {
     const Data& data;
     int height, width, walking_distance;
     std::unique_ptr<std::unique_ptr<int[]>[]> occupant_id;
+
+    std::unordered_set<Point , pair_hash> get_all_coords_in_range(const BuildingProject& building_project) const
+    {
+        std::unordered_set<Point , pair_hash> coords;
+        for (const auto& center : building_project.walls)
+        {
+            for (int i_dist = -walking_distance; i_dist <= walking_distance; ++i_dist)
+            {
+                const int i = center.first + i_dist;
+
+                // Invalid row
+                if (i < 0 || i >= height)
+                    continue;
+
+                const int j_limit = walking_distance - abs(i_dist);
+
+                for (int j_dist = -j_limit; j_dist <= j_limit; ++j_dist)
+                {
+                    const int j = center.second + j_dist;
+
+                    // Invalid column
+                    if (j < 0 || j >= width)
+                        continue;
+
+                    coords.emplace(i, j);
+                }
+            }
+        }
+        return coords;
+    }
+
+    inline bool are_coords_valid(int i, int j) const
+    {
+        return (i >= 0 && j >= 0 && i < height && j < width);
+    }
 
 public:
     explicit CollisionMap(const Data& data)
@@ -35,14 +76,9 @@ public:
         }
     }
 
-    inline bool are_coords_valid(int i, int j) const
+    bool can_be_placed(Point point, const BuildingProject& building_project)
     {
-        return (i >= 0 && j >= 0 && i < height && j < width);
-    }
-
-    bool can_be_placed(Point point, BuildingProject* building_project)
-    {
-        for (const auto [i, j] : building_project->walls)
+        for (const auto [i, j] : building_project.walls)
         {
             const int adj_i = i + point.first;
             const int adj_j = j + point.second;
@@ -75,59 +111,36 @@ public:
         }
     }
 
-    std::unordered_set<int> get_all_building_ids_in_range(Point center)
+    std::unordered_set<int> get_residential_ids_in_range(const BuildingProject& building_project) const
     {
-        std::unordered_set<int> building_ids;
+        const auto coords_within_range = get_all_coords_in_range(building_project);
+        std::unordered_set<int> result;
 
-        for (int i_dist = -walking_distance; i_dist <= walking_distance; ++i_dist)
+        for (const auto [i, j] : coords_within_range)
         {
-            const int i = center.first + i_dist;
-
-            // Invalid row
-            if (i < 0 || i >= height)
-                continue;
-
-            const int j_limit = walking_distance - abs(i_dist);
-
-            for (int j_dist = -j_limit; j_dist <= j_limit; ++j_dist)
-            {
-                const int j = center.second + j_dist;
-
-                // Invalid column
-                if (j < 0 || j >= width)
-                    continue;
-
-                if (occupant_id[i][j] != EMPTY)
-                    building_ids.insert(occupant_id[i][j]);
-            }
-
-        }
-        return building_ids;
-    }
-
-    std::vector<int> get_residential_ids_in_range(Point center)
-    {
-        const auto all_building_ids = get_all_building_ids_in_range(center);
-        std::vector<int> result;
-
-        for (int id : all_building_ids)
-        {
-            if (data.buildings[id].get().get_type() == ProjectType::Residential)
-                result.push_back(id);
+            int id = occupant_id[i][j];
+            if (id != EMPTY && data.buildings[id]->get_type() == ProjectType::Residential)
+                result.emplace(id);
         }
         return result;
     }
 
-    std::vector<int> get_utility_ids_in_range(Point center)
+    std::unordered_set<int> get_utility_ids_in_range(const BuildingProject& building_project) const
     {
-        const auto all_building_ids = get_all_building_ids_in_range(center);
-        std::vector<int> result;
+        const auto coords_within_range = get_all_coords_in_range(building_project);
+        std::unordered_set<int> result;
 
-        for (int id : all_building_ids)
+        for (const auto [i, j] : coords_within_range)
         {
-            if (data.buildings[id].get().get_type() == ProjectType::Utility)
-                result.push_back(id);
+            int id = occupant_id[i][j];
+            if (id != EMPTY && data.buildings[id]->get_type() == ProjectType::Utility)
+                result.emplace(id);
         }
         return result;
+    }
+
+    inline bool is_position_free(int i, int j) const
+    {
+        return (occupant_id[i][j] == EMPTY);
     }
 };
