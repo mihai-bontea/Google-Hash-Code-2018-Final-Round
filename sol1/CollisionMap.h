@@ -24,14 +24,14 @@ class CollisionMap
     int height, width, walking_distance;
     std::unique_ptr<std::unique_ptr<int[]>[]> occupant_id;
 
-    std::unordered_set<Point , pair_hash> get_all_coords_in_range(const BuildingProject& building_project) const
+    std::unordered_set<Point , pair_hash> get_all_coords_in_range(const Point& point, const BuildingProject& building_project) const
     {
         std::unordered_set<Point , pair_hash> coords;
         for (const auto& center : building_project.walls)
         {
             for (int i_dist = -walking_distance; i_dist <= walking_distance; ++i_dist)
             {
-                const int i = center.first + i_dist;
+                const int i = center.first + point.first + i_dist;
 
                 // Invalid row
                 if (i < 0 || i >= height)
@@ -41,7 +41,7 @@ class CollisionMap
 
                 for (int j_dist = -j_limit; j_dist <= j_limit; ++j_dist)
                 {
-                    const int j = center.second + j_dist;
+                    const int j = center.second + point.second + j_dist;
 
                     // Invalid column
                     if (j < 0 || j >= width)
@@ -76,7 +76,7 @@ public:
         }
     }
 
-    bool can_be_placed(Point point, const BuildingProject& building_project)
+    bool can_be_placed(const Point& point, const BuildingProject& building_project)
     {
         for (const auto [i, j] : building_project.walls)
         {
@@ -89,7 +89,7 @@ public:
         return true;
     }
 
-    void place_building(Point point, BuildingProject* building_project)
+    void place_building(const Point& point, BuildingProject* building_project)
     {
         for (const auto [i, j] : building_project->walls)
         {
@@ -100,7 +100,7 @@ public:
         }
     }
 
-    void remove_building(Point point, BuildingProject* building_project)
+    void remove_building(const Point& point, BuildingProject* building_project)
     {
         for (const auto [i, j] : building_project->walls)
         {
@@ -111,9 +111,9 @@ public:
         }
     }
 
-    std::unordered_set<int> get_residential_ids_in_range(const BuildingProject& building_project) const
+    std::unordered_set<int> get_residential_ids_in_range(const Point& point, const BuildingProject& building_project) const
     {
-        const auto coords_within_range = get_all_coords_in_range(building_project);
+        const auto coords_within_range = get_all_coords_in_range(point, building_project);
         std::unordered_set<int> result;
 
         for (const auto [i, j] : coords_within_range)
@@ -125,9 +125,9 @@ public:
         return result;
     }
 
-    std::unordered_set<int> get_utility_ids_in_range(const BuildingProject& building_project) const
+    std::unordered_set<int> get_utility_ids_in_range(const Point& point, const BuildingProject& building_project) const
     {
-        const auto coords_within_range = get_all_coords_in_range(building_project);
+        const auto coords_within_range = get_all_coords_in_range(point, building_project);
         std::unordered_set<int> result;
 
         for (const auto [i, j] : coords_within_range)
