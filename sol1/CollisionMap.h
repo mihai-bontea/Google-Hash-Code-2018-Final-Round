@@ -89,14 +89,14 @@ public:
         return true;
     }
 
-    void place_building(const Point& point, BuildingProject* building_project)
+    void place_building(const Point& point, const BuildingProject& building_project)
     {
-        for (const auto [i, j] : building_project->walls)
+        for (const auto [i, j] : building_project.walls)
         {
             const int adj_i = i + point.first;
             const int adj_j = j + point.second;
 
-            occupant_id[adj_i][adj_j] = building_project->id;
+            occupant_id[adj_i][adj_j] = building_project.id;
         }
     }
 
