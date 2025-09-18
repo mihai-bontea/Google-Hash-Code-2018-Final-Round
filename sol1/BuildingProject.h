@@ -31,14 +31,11 @@ struct BuildingProject {
 
 struct Residential : public BuildingProject{
     int nr_residents;
-//    std::vector<std::unordered_set<int>> util_type_to_ids;
 
     Residential(int height, int width, int id, int nr_residents, std::vector<std::pair<int, int>> walls)
     : BuildingProject(height, width, id, std::move(walls))
     , nr_residents(nr_residents)
-    {
-//        util_type_to_ids.reserve(MAX_TYPES_UTILITY);
-    }
+    {}
 
     [[nodiscard]] ProjectType get_type() const override
     {
