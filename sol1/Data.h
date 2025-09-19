@@ -1,14 +1,14 @@
 #pragma once
 
+#include <map>
+#include <memory>
 #include <vector>
+#include <memory>
 #include <fstream>
 #include <iostream>
-#include <memory>
-#include <map>
-
-#include <memory>
 
 #include "BuildingProject.h"
+#include "Definitions.h"
 
 #define MAX_BUILDINGS 200
 #define MAX_PROJECT_SIZE 50
@@ -62,8 +62,12 @@ struct Data
         }
     }
 
-    static void write_to_file(const std::string& filename)
+    static void write_to_file(const std::string& filename, const std::unordered_map<int, Coords>& chosen_buildings)
     {
         std::ofstream fout(filename);
+        for (const auto [project_id, coords] : chosen_buildings)
+        {
+            fout << project_id << " " << coords.first << " " << coords.second << '\n';
+        }
     }
 };

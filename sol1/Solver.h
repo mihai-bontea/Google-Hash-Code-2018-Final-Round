@@ -8,45 +8,55 @@
 
 class Solver
 {
-protected:
+private:
     const Data& data;
     SimulationState simulation_state;
-
-public:
-
-    explicit Solver(const Data& data)
-            : data(data)
-            , simulation_state(data)
-    {}
 
     std::pair<int, int> choose_best_building_for_position(Coords point)
     {
         int best_id = -1, best_score = -1;
 
-            omp_set_num_threads(12);
-            #pragma omp parallel for
-            for (int project_id = 0; project_id < data.nr_building_projects; ++project_id)
+        omp_set_num_threads(12);
+        #pragma omp parallel for
+        for (int project_id = 0; project_id < data.nr_building_projects; ++project_id)
+        {
+            // This building doesn't fit in the given space
+            if (!simulation_state.collision_map.can_be_placed(point, project_id))
+                continue;
+
+            // Score improvement, save the project id
+            const int score_gain = simulation_state.get_points_by_addition(point, project_id);
+
+            #pragma omp critical
             {
-                // This building doesn't fit in the given space
-                if (!simulation_state.collision_map.can_be_placed(point, project_id))
-                    continue;
-
-                // Score improvement, save the project id
-                const int score_gain = simulation_state.get_points_by_addition(point, project_id);
-
-                #pragma omp critical
+                if (score_gain > best_score)
                 {
-                    if (score_gain > best_score)
-                    {
-                        best_score = score_gain;
-                        best_id = project_id;
-                    }
+                    best_score = score_gain;
+                    best_id = project_id;
                 }
             }
+        }
         return {best_id, best_score};
     }
 
-    void solve()
+    std::unordered_map<int, Coords> get_processed_results()
+    {
+        std::unordered_map<int, Coords> results;
+        for (const auto [construction_id, coord] : simulation_state.chosen_buildings)
+        {
+            results.emplace(simulation_state.constr_id_to_project_id[construction_id], coord);
+        }
+        return results;
+    }
+
+public:
+
+    explicit Solver(const Data& data)
+        : data(data)
+        , simulation_state(data)
+    {}
+
+    std::unordered_map<int, Coords> solve()
     {
         for (int i = 0; i < data.city_height; ++i)
         {
@@ -73,5 +83,7 @@ public:
 
         std::cout << "Placed " << simulation_state.chosen_buildings.size() << " buildings. Score = "
             << simulation_state.total_score << std::endl;
+
+        return get_processed_results();
     }
 };

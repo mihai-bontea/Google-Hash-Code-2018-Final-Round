@@ -13,17 +13,13 @@ int main()
     for (const auto& input_file : input_files)
     {
         Data data(in_prefix + input_file);
-        std::cout << "Successfully read\n";
+        std::cout << "Successfully read input file\n";
         Solver solver(data);
 
-        std::cout << data.buildings.size();
+        const auto result = solver.solve();
 
-        solver.solve();
-
-//        const auto out_filename = out_prefix + input_file.substr(0, (input_file.find('.'))) + ".out";
-//        Data::write_to_file(out_filename);
-
-//        break;
+        const auto out_filename = out_prefix + input_file.substr(0, (input_file.find('.'))) + ".out";
+        Data::write_to_file(out_filename, result);
     }
 
     return 0;
