@@ -4,6 +4,8 @@
 
 #include "SimulationState.h"
 
+#include <omp.h>
+
 using Point = std::pair<int, int>;
 
 class Solver
@@ -21,26 +23,28 @@ public:
 
     std::pair<int, int> choose_best_building_for_position(Point point)
     {
-//        std::cout << "Trying to choose a building\n";
         int best_id = -1, best_score = -1;
 
-        for (int project_id = 0; project_id < data.nr_building_projects; ++project_id)
-        {
-//            std::cout << "trying to place " << project_id << "\n";
-            // This building doesn't fit in the given space
-            if (!simulation_state.collision_map.can_be_placed(point, project_id))
-                continue;
-
-            // Score improvement, save the project id
-            const int score_gain = simulation_state.get_points_by_addition(point, project_id);
-//            std::cout << "score_gain = " << score_gain << std::endl;
-            if (score_gain > best_score)
+            omp_set_num_threads(12);
+            #pragma omp parallel for
+            for (int project_id = 0; project_id < data.nr_building_projects; ++project_id)
             {
-                best_score = score_gain;
-                best_id = project_id;
+                // This building doesn't fit in the given space
+                if (!simulation_state.collision_map.can_be_placed(point, project_id))
+                    continue;
+
+                // Score improvement, save the project id
+                const int score_gain = simulation_state.get_points_by_addition(point, project_id);
+
+                #pragma omp critical
+                {
+                    if (score_gain > best_score)
+                    {
+                        best_score = score_gain;
+                        best_id = project_id;
+                    }
+                }
             }
-        }
-//        std::cout << "best_id = " << best_id << " best_score = " << best_score << std::endl;
         return {best_id, best_score};
     }
 

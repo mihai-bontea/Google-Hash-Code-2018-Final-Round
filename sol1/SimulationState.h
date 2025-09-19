@@ -37,7 +37,7 @@ private:
 
     /// When adding a utility building, the score increase is determined by the number of residents around
     /// who are now receiving access to a NEW utility type(no increase if they already had access to this type)
-    int get_points_by_addition(const Coords& point, const Utility& utility)
+    int get_points_by_addition(const Coords& point, const Utility& utility) const
     {
         const auto residential_ids_within_range = collision_map.get_residential_ids_in_range(point, utility);
 //        std::cout << "resuming point calc for utility\n";
@@ -48,10 +48,14 @@ private:
         {
 //            std::cout << "real_id= " << real_id << " residential_id= " << residential_id << std::endl;
             const auto residential_ptr = dynamic_cast<const Residential*>(data.buildings[residential_id].get());
-            auto& utils_by_type = res_id_to_utility_by_type[real_id];
+//            auto& utils_by_type = res_id_to_utility_by_type[real_id];
+            const auto utils_by_type_it = res_id_to_utility_by_type.find(real_id);
+            if (utils_by_type_it == res_id_to_utility_by_type.end())
+                continue;
 
             // This utility type is unsatisfied => score increase
-            if (utils_by_type[utility.utility_type].empty())
+            auto utility_type_it = utils_by_type_it->second.find(utility.utility_type);
+            if (utility_type_it ==  utils_by_type_it->second.end() || utility_type_it->second.empty())
                 score_added += residential_ptr->nr_residents;
         }
         return score_added;

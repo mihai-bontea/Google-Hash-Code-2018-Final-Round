@@ -73,7 +73,7 @@ public:
 
     /// Returns true if the building project fits at the given point(top left corner)
     /// Collision with other previously placed buildings is taken into account
-    bool can_be_placed(const Coords& point, int project_id)
+    bool can_be_placed(const Coords& point, int project_id) const
     {
 //        std::cout << "can_be_placed\n";
         const auto& building_project = data.buildings[project_id];
