@@ -11,6 +11,7 @@
 #include "BuildingProject.h"
 
 #define MAX_BUILDINGS 200
+#define MAX_PROJECT_SIZE 50
 
 struct Data
 {
@@ -23,17 +24,25 @@ struct Data
         fin >> city_height >> city_width >> max_walking_dist >> nr_building_projects;
 
         auto read_layout = [&fin](int height, int width){
-            std::vector<std::pair<int, int>> walls;
+            char project_map[MAX_PROJECT_SIZE][MAX_PROJECT_SIZE];
 
+            std::vector<std::pair<int, int>> walls;
             for (int i = 0; i < height; ++i)
                 for (int j = 0; j < width; ++j)
                 {
-                    char c;
-                    fin >> c;
-                    if (c == '#')
+                    fin >> project_map[i][j];
+                    if (project_map[i][j] == '#')
                         walls.emplace_back(i, j);
                 }
-            return walls;
+
+            std::vector<std::pair<int, int>> outer_walls;
+            for (int i = 0; i < height; ++i)
+                for (int j = 0; j < width; ++j)
+                    if (project_map[i][j] == '#' && (i == 0 || i == height - 1 || j == 0 || j == width - 1 ||
+                    project_map[i - 1][j] == '.' || project_map[i][j - 1] == '.' || project_map[i + 1][j] == '.' || project_map[i][j + 1] == '.'))
+                        outer_walls.emplace_back(i, j);
+
+            return std::make_pair(walls, outer_walls);
         };
 
         char building_type;
@@ -41,14 +50,14 @@ struct Data
         for (int id = 0; id < nr_building_projects; ++id)
         {
             fin >> building_type >> height >> width >> res_or_type;
-            auto walls = read_layout(height, width);
+            auto [walls, outer_walls] = read_layout(height, width);
             if (building_type == 'R')
             {
-                buildings[id] = std::make_unique<Residential>(height, width, id, res_or_type, walls);
+                buildings[id] = std::make_unique<Residential>(height, width, id, res_or_type, walls, outer_walls);
             }
             else
             {
-                buildings[id] = std::make_unique<Utility>(height, width, id, res_or_type, walls);
+                buildings[id] = std::make_unique<Utility>(height, width, id, res_or_type, walls, outer_walls);
             }
         }
     }

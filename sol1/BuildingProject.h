@@ -12,13 +12,15 @@ enum class ProjectType{
 
 struct BuildingProject {
     const int height, width, id;
-    const std::vector<std::pair<int, int>> walls;
+    const std::vector<std::pair<int, int>> walls, outer_walls;
 
-    BuildingProject(int height, int width, int id, std::vector<std::pair<int, int>> walls)
+
+    BuildingProject(int height, int width, int id, std::vector<std::pair<int, int>> walls, std::vector<std::pair<int, int>> outer_walls)
     : height(height)
     , width(width)
     , id(id)
     , walls(std::move(walls))
+    , outer_walls(std::move(outer_walls))
     {}
 
     [[nodiscard]] virtual ProjectType get_type() const
@@ -32,8 +34,8 @@ struct BuildingProject {
 struct Residential : public BuildingProject{
     int nr_residents;
 
-    Residential(int height, int width, int id, int nr_residents, std::vector<std::pair<int, int>> walls)
-    : BuildingProject(height, width, id, std::move(walls))
+    Residential(int height, int width, int id, int nr_residents, std::vector<std::pair<int, int>> walls, std::vector<std::pair<int, int>> outer_walls)
+    : BuildingProject(height, width, id, std::move(walls), std::move(outer_walls))
     , nr_residents(nr_residents)
     {}
 
@@ -46,8 +48,8 @@ struct Residential : public BuildingProject{
 struct Utility : public BuildingProject {
     int utility_type;
 
-    Utility(int height, int width, int id, int utility_type, std::vector<std::pair<int, int>> walls)
-    : BuildingProject(height, width, id, std::move(walls))
+    Utility(int height, int width, int id, int utility_type, std::vector<std::pair<int, int>> walls, std::vector<std::pair<int, int>> outer_walls)
+    : BuildingProject(height, width, id, std::move(walls), std::move(outer_walls))
     , utility_type(utility_type)
     {}
 

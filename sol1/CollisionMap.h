@@ -20,20 +20,18 @@ class CollisionMap
     CoordSet get_all_coords_in_range(const Coords& point, const BuildingProject& building_project) const
     {
         CoordSet coords;
-        for (const auto& center : building_project.walls)
+        // changing to outer_walls
+        for (const auto& center : building_project.outer_walls)
         {
             for (int i_dist = -walking_distance; i_dist <= walking_distance; ++i_dist)
             {
                 const int i = center.first + point.first + i_dist;
-//                std::cout << "i= " << i << std::endl;
 
                 // Invalid row
                 if (i < 0 || i >= height)
                     continue;
 
-//                std::cout << "WALKING_distance = " << walking_distance << " " << "abs(i_dist)" << abs(i_dist) << std::endl;
                 const int j_limit = walking_distance - abs(i_dist);
-//                std::cout << "j_limit = " << j_limit << std::endl;
 
                 for (int j_dist = -j_limit; j_dist <= j_limit; ++j_dist)
                 {
@@ -43,12 +41,10 @@ class CollisionMap
                     if (j < 0 || j >= width)
                         continue;
 
-//                    std::cout << "got to emplace\n";
                     coords.emplace(i, j);
                 }
             }
         }
-//        std::cout << "Returning\n";
         return coords;
     }
 
