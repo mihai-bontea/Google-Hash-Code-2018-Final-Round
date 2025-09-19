@@ -6,12 +6,11 @@
 
 class SimulationState
 {
+private:
     const Data& data;
-    CollisionMap collision_map;
 
-    size_t nextConstrId;
+    size_t next_constr_id;
     std::unordered_map<size_t, int> constr_id_to_project_id;
-    std::unordered_map<size_t, Coords> chosen_buildings;
     std::unordered_map<size_t, std::unordered_map<int, std::vector<size_t>>> res_id_to_utility_by_type;
 
     std::unordered_set<int> get_utility_types(const ConstrIdSet& utility_ids)
@@ -23,21 +22,6 @@ class SimulationState
             result.insert(residential_ptr->utility_type);
         }
         return result;
-    }
-
-public:
-    int get_points_by_addition(const Coords& point, const BuildingProject* building_project)
-    {
-        if (building_project->get_type() == ProjectType::Residential)
-        {
-            const auto residential_ptr = dynamic_cast<const Residential*>(building_project);
-            return get_points_by_addition(point, *residential_ptr);
-        }
-        else
-        {
-            const auto utility_ptr = dynamic_cast<const Utility*>(building_project);
-            return get_points_by_addition(point, *utility_ptr);
-        }
     }
 
     /// When adding a residential building, the score increase is determined by its nr_residents
@@ -56,11 +40,13 @@ public:
     int get_points_by_addition(const Coords& point, const Utility& utility)
     {
         const auto residential_ids_within_range = collision_map.get_residential_ids_in_range(point, utility);
+//        std::cout << "resuming point calc for utility\n";
 
         // Go over each residential in range, check if their utility type is satisfied
         int score_added = 0;
         for (auto [real_id, residential_id] : residential_ids_within_range)
         {
+//            std::cout << "real_id= " << real_id << " residential_id= " << residential_id << std::endl;
             const auto residential_ptr = dynamic_cast<const Residential*>(data.buildings[residential_id].get());
             auto& utils_by_type = res_id_to_utility_by_type[real_id];
 
@@ -71,13 +57,10 @@ public:
         return score_added;
     }
 
-    ///
     void add_building(const Coords& point, const Residential& residential)
     {
-        chosen_buildings[nextConstrId] = point;
-        
         const auto utility_ids_within_range = collision_map.get_utility_ids_in_range(point, residential);
-        auto& utility_by_type = res_id_to_utility_by_type[nextConstrId];
+        auto& utility_by_type = res_id_to_utility_by_type[next_constr_id];
         for (auto [real_id, utility_id] : utility_ids_within_range)
         {
             auto utility_ptr = dynamic_cast<Utility*>(data.buildings[utility_id].get());
@@ -88,31 +71,67 @@ public:
     void add_building(const Coords& point, const Utility& utility)
     {
         const auto residential_ids_within_range = collision_map.get_residential_ids_in_range(point, utility);
-
-        chosen_buildings.emplace_back(utility.id, point);
-
-        for (int id : residential_ids_within_range)
+        for (auto [real_id, residential_id] : residential_ids_within_range)
         {
-            auto& utility_by_type = res_id_to_utility_by_type[id];
-            utility_by_type[utility.utility_type].push_back(utility.id);
+            auto& utility_by_type = res_id_to_utility_by_type[real_id];
+            utility_by_type[utility.utility_type].push_back(next_constr_id);
         }
     }
 
-    void remove_building(const Coords& point, const Residential& residential)
+public:
+    CollisionMap collision_map;
+
+    unsigned long long total_score = 0;
+
+    std::unordered_map<size_t, Coords> chosen_buildings;
+
+    explicit SimulationState(const Data& data)
+        : data(data)
+        , collision_map(data)
+        , next_constr_id(0)
+    {}
+
+    int get_points_by_addition(const Coords& point, int project_id)
     {
-        std::erase_if(chosen_buildings, [&residential](const auto& id_and_coord) {
-            return id_and_coord.first == residential.id;
-        });
-        auto& utility_by_type = res_id_to_utility_by_type[residential.id];
-        utility_by_type.clear();
+        const auto& building_project = data.buildings[project_id].get();
+        if (building_project->get_type() == ProjectType::Residential)
+        {
+//            std::cout << "checking residential\n";
+            const auto residential_ptr = dynamic_cast<const Residential*>(building_project);
+            return get_points_by_addition(point, *residential_ptr);
+        }
+        else
+        {
+//            std::cout << "checking utility\n";
+            const auto utility_ptr = dynamic_cast<const Utility*>(building_project);
+            return get_points_by_addition(point, *utility_ptr);
+        }
     }
 
-    void remove_building(const Coords& point, const Utility& utility)
+    void add_building(const Coords& point, int project_id)
     {
-        std::erase_if(chosen_buildings, [&utility](const auto& id_and_coord) {
-            return id_and_coord.first == utility.id;
-        });
+        // Store the top-left corner of the building
+        chosen_buildings[next_constr_id] = point;
 
+        // Link the real construction id to the project_id
+        constr_id_to_project_id[next_constr_id] = project_id;
 
+        // Add it to the collision map
+        collision_map.place_building(point, {next_constr_id, project_id});
+
+        const auto& building_project = data.buildings[project_id].get();
+        if (building_project->get_type() == ProjectType::Residential)
+        {
+            const auto residential_ptr = dynamic_cast<const Residential*>(building_project);
+            add_building(point, *residential_ptr);
+        }
+        else
+        {
+            const auto utility_ptr = dynamic_cast<const Utility*>(building_project);
+            add_building(point, *utility_ptr);
+        }
+
+        // Increment the id
+        ++next_constr_id;
     }
 };

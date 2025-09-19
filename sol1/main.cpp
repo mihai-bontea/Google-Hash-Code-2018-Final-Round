@@ -14,12 +14,16 @@ int main()
     {
         Data data(in_prefix + input_file);
         std::cout << "Successfully read\n";
-//        std::cout << "max walking distance = " << data.max_walking_dist << std::endl;
         Solver solver(data);
 
+        std::cout << data.buildings.size();
 
-        const auto out_filename = out_prefix + input_file.substr(0, (input_file.find('.'))) + ".out";
-        Data::write_to_file(out_filename);
+        solver.solve();
+
+//        const auto out_filename = out_prefix + input_file.substr(0, (input_file.find('.'))) + ".out";
+//        Data::write_to_file(out_filename);
+
+//        break;
     }
 
     return 0;
