@@ -2,11 +2,9 @@
 
 #include <unordered_map>
 
-#include "SimulationState.h"
-
 #include <omp.h>
 
-using Point = std::pair<int, int>;
+#include "SimulationState.h"
 
 class Solver
 {
@@ -21,7 +19,7 @@ public:
             , simulation_state(data)
     {}
 
-    std::pair<int, int> choose_best_building_for_position(Point point)
+    std::pair<int, int> choose_best_building_for_position(Coords point)
     {
         int best_id = -1, best_score = -1;
 
@@ -65,7 +63,6 @@ public:
                 if (best_id == -1)
                     continue;
 
-//                std::cout << "Placing a building\n";
                 // Update score and collision map
                 simulation_state.total_score += score_increase;
 
