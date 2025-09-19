@@ -7,8 +7,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "BuildingProject.h"
 #include "Definitions.h"
+#include "BuildingProject.h"
 
 #define MAX_BUILDINGS 200
 #define MAX_PROJECT_SIZE 50

@@ -39,15 +39,12 @@ private:
     int get_points_by_addition(const Coords& point, const Utility& utility) const
     {
         const auto residential_ids_within_range = collision_map.get_residential_ids_in_range(point, utility);
-//        std::cout << "resuming point calc for utility\n";
 
         // Go over each residential in range, check if their utility type is satisfied
         int score_added = 0;
         for (auto [real_id, residential_id] : residential_ids_within_range)
         {
-//            std::cout << "real_id= " << real_id << " residential_id= " << residential_id << std::endl;
             const auto residential_ptr = dynamic_cast<const Residential*>(data.buildings[residential_id].get());
-//            auto& utils_by_type = res_id_to_utility_by_type[real_id];
             const auto utils_by_type_it = res_id_to_utility_by_type.find(real_id);
             if (utils_by_type_it == res_id_to_utility_by_type.end())
                 continue;
@@ -101,13 +98,11 @@ public:
         const auto& building_project = data.buildings[project_id].get();
         if (building_project->get_type() == ProjectType::Residential)
         {
-//            std::cout << "checking residential\n";
             const auto residential_ptr = dynamic_cast<const Residential*>(building_project);
             return get_points_by_addition(point, *residential_ptr);
         }
         else
         {
-//            std::cout << "checking utility\n";
             const auto utility_ptr = dynamic_cast<const Utility*>(building_project);
             return get_points_by_addition(point, *utility_ptr);
         }

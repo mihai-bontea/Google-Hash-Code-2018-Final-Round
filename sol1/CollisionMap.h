@@ -75,9 +75,7 @@ public:
     /// Collision with other previously placed buildings is taken into account
     bool can_be_placed(const Coords& point, int project_id) const
     {
-//        std::cout << "can_be_placed\n";
         const auto& building_project = data.buildings[project_id];
-//        std::cout << "Managed to cast, and it has " << building_project->walls.size() << "walls\n";
         return std::all_of(building_project->walls.begin(), building_project->walls.end(), [&](const auto& wall){
             const int adj_i = wall.first + point.first;
             const int adj_j = wall.second + point.second;
@@ -113,32 +111,25 @@ public:
 
     ConstrIdSet get_residential_ids_in_range(const Coords& point, const BuildingProject& building_project) const
     {
-//        std::cout << "Checking all coods in range\n";
         const auto coords_within_range = get_all_coords_in_range(point, building_project);
         ConstrIdSet result;
 
         for (const auto [i, j] : coords_within_range)
         {
-//            std::cout << "About to access " << i << ", " << j << std::endl;
             auto constr_id = occupant_id[i][j];
-//            std::cout << "And it is " << constr_id.first << ", " << constr_id.second << "\n";
             if (constr_id.first != EMPTY && data.buildings[constr_id.second]->get_type() == ProjectType::Residential)
                 result.emplace(constr_id);
         }
-//        std::cout << "Returning in get_residential_ids_in_range\n";
         return result;
     }
 
-    ConstrIdSet get_utility_ids_in_range(const Coords& point, const BuildingProject& building_project) const
+    [[nodiscard]] ConstrIdSet get_utility_ids_in_range(const Coords& point, const BuildingProject& building_project) const
     {
-//        std::cout << "!\n";
         const auto coords_within_range = get_all_coords_in_range(point, building_project);
-//        std::cout << "?\n";
         ConstrIdSet result;
 
         for (const auto [i, j] : coords_within_range)
         {
-//            std::cout << "About to access " << i << ", " << j << std::endl;
             auto constr_id = occupant_id[i][j];
             if (constr_id.first != EMPTY && data.buildings[constr_id.second]->get_type() == ProjectType::Utility)
                 result.emplace(constr_id);
