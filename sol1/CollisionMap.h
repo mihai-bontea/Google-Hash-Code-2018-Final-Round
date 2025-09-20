@@ -146,6 +146,8 @@ public:
         }
     }
 
+    /// Removes the building from the collision map
+    /// Won't actually be used for the greedy implementation since there is no backtrack step
     void remove_building(const Coords& point, int project_id)
     {
         const auto& building_project = data.buildings[project_id];

@@ -18,7 +18,7 @@ struct Data
     int city_height, city_width, max_walking_dist, nr_building_projects;
     std::array<std::unique_ptr<BuildingProject>, MAX_BUILDINGS> buildings;
 
-    Data(const std::string& filename)
+    explicit Data(const std::string& filename)
     {
         std::ifstream fin(filename);
         fin >> city_height >> city_width >> max_walking_dist >> nr_building_projects;
