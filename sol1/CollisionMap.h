@@ -41,45 +41,64 @@ class CollisionMap
 
     void precompute_offsets()
     {
-        for (const auto& building_project : data.buildings)
+//        omp_set_num_threads(12);
+//        #pragma omp parallel for
+// stuff inside is 'destructive' therefore it gotta be made parallel with more care
+        for (int project_id = 0; project_id < data.nr_building_projects; ++project_id)
         {
-            precomputed_offsets[building_project->id] = get_all_offsets_in_range(*building_project.get());
+            const auto& building_project = data.buildings[project_id];
+            precomputed_offsets[project_id] = get_all_offsets_in_range(*building_project.get());
         }
     }
 
     /// Returns all coordinates in walking distance of the given building project
+//    [[nodiscard]] CoordSet get_all_coords_in_range(const Coords& point, const BuildingProject& building_project) const
+//    {
+//        CoordSet coords;
+//        // changing to outer_walls
+//        for (const auto& center : building_project.outer_walls)
+//        {
+//            for (int i_dist = -walking_distance; i_dist <= walking_distance; ++i_dist)
+//            {
+//                const int i = center.first + point.first + i_dist;
+//
+//                // Invalid row
+//                if (i < 0 || i >= height)
+//                    continue;
+//
+//                const int j_limit = walking_distance - abs(i_dist);
+//
+//                for (int j_dist = -j_limit; j_dist <= j_limit; ++j_dist)
+//                {
+//                    const int j = center.second + point.second + j_dist;
+//
+//                    // Invalid column
+//                    if (j < 0 || j >= width)
+//                        continue;
+//
+//                    coords.emplace(i, j);
+//                }
+//            }
+//        }
+//        return coords;
+//    }
     [[nodiscard]] CoordSet get_all_coords_in_range(const Coords& point, const BuildingProject& building_project) const
     {
         CoordSet coords;
-        // changing to outer_walls
-        for (const auto& center : building_project.outer_walls)
+        const auto& offsets = precomputed_offsets.find(building_project.id)->second;
+        for (const auto [i_off, j_off] : offsets)
         {
-            for (int i_dist = -walking_distance; i_dist <= walking_distance; ++i_dist)
-            {
-                const int i = center.first + point.first + i_dist;
+            const int i = i_off + point.first;
+            const int j = j_off + point.second;
 
-                // Invalid row
-                if (i < 0 || i >= height)
-                    continue;
-
-                const int j_limit = walking_distance - abs(i_dist);
-
-                for (int j_dist = -j_limit; j_dist <= j_limit; ++j_dist)
-                {
-                    const int j = center.second + point.second + j_dist;
-
-                    // Invalid column
-                    if (j < 0 || j >= width)
-                        continue;
-
-                    coords.emplace(i, j);
-                }
-            }
+            if (are_coords_valid(i, j))
+                coords.emplace(i, j);
         }
         return coords;
     }
 
-    inline bool are_coords_valid(int i, int j) const
+
+    [[nodiscard]] inline bool are_coords_valid(int i, int j) const
     {
         return (i >= 0 && j >= 0 && i < height && j < width);
     }
@@ -101,6 +120,7 @@ public:
                 occupant_id[i][j] = {EMPTY, 0};
         }
         precompute_offsets();
+        std::cout << "Precomputed the offsets for every project.\n";
     }
 
     /// Returns true if the building project fits at the given point(top left corner)
@@ -115,8 +135,7 @@ public:
             return are_coords_valid(adj_i, adj_j) && occupant_id[adj_i][adj_j].first == EMPTY;
         });
     }
-
-
+    
     void place_building(const Coords& point, RealIdAndProjectId construction_id)
     {
         const auto& building_project = data.buildings[construction_id.second];
