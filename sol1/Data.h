@@ -62,9 +62,10 @@ struct Data
         }
     }
 
-    static void write_to_file(const std::string& filename, const std::unordered_map<int, Coords>& chosen_buildings)
+    static void write_to_file(const std::string& filename, const std::vector<std::pair<int, Coords>>& chosen_buildings)
     {
         std::ofstream fout(filename);
+        fout << chosen_buildings.size() << '\n';
         for (const auto [project_id, coords] : chosen_buildings)
         {
             fout << project_id << " " << coords.first << " " << coords.second << '\n';

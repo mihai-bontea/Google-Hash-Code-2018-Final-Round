@@ -39,12 +39,12 @@ private:
         return {best_id, best_score};
     }
 
-    std::unordered_map<int, Coords> get_processed_results()
+    std::vector<std::pair<int, Coords>> get_processed_results()
     {
-        std::unordered_map<int, Coords> results;
+        std::vector<std::pair<int, Coords>> results;
         for (const auto [construction_id, coord] : simulation_state.chosen_buildings)
         {
-            results.emplace(simulation_state.constr_id_to_project_id[construction_id], coord);
+            results.emplace_back(simulation_state.constr_id_to_project_id[construction_id], coord);
         }
         return results;
     }
@@ -56,7 +56,7 @@ public:
         , simulation_state(data)
     {}
 
-    std::unordered_map<int, Coords> solve()
+    std::vector<std::pair<int, Coords>> solve()
     {
         for (int i = 0; i < data.city_height; ++i)
         {

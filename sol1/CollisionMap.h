@@ -135,7 +135,7 @@ public:
             return are_coords_valid(adj_i, adj_j) && occupant_id[adj_i][adj_j].first == EMPTY;
         });
     }
-    
+
     void place_building(const Coords& point, RealIdAndProjectId construction_id)
     {
         const auto& building_project = data.buildings[construction_id.second];
