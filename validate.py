@@ -36,6 +36,14 @@ def read_solution(filename) -> Solution:
     return Solution(buildings_placed, id_at_coord)
 
 
+def validate_no_building_overlap(buildings, solution):
+    walls = []
+    for project_id, coords in solution.id_at_coord:
+        for wall_i, wall_j in buildings[project_id].walls:
+            walls.append((wall_i + coords[0], wall_j + coords[1]))
+    
+    assert(len(walls) == len(set(walls)))
+
 solutions = ["sol1"]
 input_files = ["a_example", "b_short_walk", "c_going_green", "d_wide_selection", "e_precise_fit", "f_different_footprints"]
 
@@ -48,6 +56,8 @@ for input_file in input_files:
             output_file = f"output_files/{solution}/{input_file}.out"
             try:
                 solution = read_solution(output_file)
+
+                validate_no_building_overlap(buildings, solution)
 
             except FileNotFoundError:
                 print(f"Error: File '{output_file}' not found.")
