@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <unordered_map>
 
 #include <omp.h>
@@ -11,6 +12,7 @@ class Solver
 private:
     const Data& data;
     SimulationState simulation_state;
+    const std::chrono::steady_clock::time_point start;
 
     std::pair<int, int> choose_best_building_for_position(Coords point)
     {
@@ -54,6 +56,7 @@ public:
     explicit Solver(const Data& data)
         : data(data)
         , simulation_state(data)
+        , start(std::chrono::steady_clock::now())
     {}
 
     std::vector<std::pair<int, Coords>> solve()
@@ -81,8 +84,11 @@ public:
             }
         }
 
+        const auto now = std::chrono::steady_clock::now();
+        const auto elapsed = duration_cast<std::chrono::minutes>(now - start);
+
         std::cout << "Placed " << simulation_state.chosen_buildings.size() << " buildings. Score = "
-            << simulation_state.total_score << std::endl;
+            << simulation_state.total_score << ". Time = " << elapsed.count() << " minutes.\n";
 
         return get_processed_results();
     }
