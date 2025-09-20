@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <algorithm>
 #include <memory>
 #include <cstring>
@@ -15,9 +16,39 @@ class CollisionMap
     const Data& data;
     int height, width, walking_distance;
     std::unique_ptr<std::unique_ptr<RealIdAndProjectId []>[]> occupant_id;
+    std::map<int, CoordSet> precomputed_offsets;
+
+    [[nodiscard]] CoordSet get_all_offsets_in_range(const BuildingProject& building_project) const
+    {
+        CoordSet offsets;
+
+        for (const auto& center: building_project.outer_walls)
+        {
+            for (int i_dist = -walking_distance; i_dist <= walking_distance; ++i_dist)
+            {
+                const int i = center.first + i_dist;
+                const int j_limit = walking_distance - abs(i_dist);
+
+                for (int j_dist = -j_limit; j_dist <= j_limit; ++j_dist)
+                {
+                    const int j = center.second + j_dist;
+                    offsets.emplace(i, j);
+                }
+            }
+        }
+        return offsets;
+    }
+
+    void precompute_offsets()
+    {
+        for (const auto& building_project : data.buildings)
+        {
+            precomputed_offsets[building_project->id] = get_all_offsets_in_range(*building_project.get());
+        }
+    }
 
     /// Returns all coordinates in walking distance of the given building project
-    CoordSet get_all_coords_in_range(const Coords& point, const BuildingProject& building_project) const
+    [[nodiscard]] CoordSet get_all_coords_in_range(const Coords& point, const BuildingProject& building_project) const
     {
         CoordSet coords;
         // changing to outer_walls
@@ -69,6 +100,7 @@ public:
             for (int j = 0; j < width; ++j)
                 occupant_id[i][j] = {EMPTY, 0};
         }
+        precompute_offsets();
     }
 
     /// Returns true if the building project fits at the given point(top left corner)
