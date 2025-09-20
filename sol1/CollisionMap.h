@@ -1,15 +1,13 @@
 #pragma once
 
 #include <map>
-#include <algorithm>
 #include <memory>
-#include <cstring>
 #include <vector>
+#include <cstring>
+#include <algorithm>
 
-#include "BuildingProject.h"
 #include "Data.h"
-
-#include "Definitions.h"
+#include "BuildingProject.h"
 
 class CollisionMap
 {
@@ -125,7 +123,7 @@ public:
 
     /// Returns true if the building project fits at the given point(top left corner)
     /// Collision with other previously placed buildings is taken into account
-    bool can_be_placed(const Coords& point, int project_id) const
+    [[nodiscard]] bool can_be_placed(const Coords& point, int project_id) const
     {
         const auto& building_project = data.buildings[project_id];
         return std::all_of(building_project->walls.begin(), building_project->walls.end(), [&](const auto& wall){
@@ -160,7 +158,7 @@ public:
         }
     }
 
-    ConstrIdSet get_residential_ids_in_range(const Coords& point, const BuildingProject& building_project) const
+    [[nodiscard]] ConstrIdSet get_residential_ids_in_range(const Coords& point, const BuildingProject& building_project) const
     {
         const auto coords_within_range = get_all_coords_in_range(point, building_project);
         ConstrIdSet result;
@@ -188,7 +186,7 @@ public:
         return result;
     }
 
-    inline bool is_position_free(int i, int j) const
+    [[nodiscard]] inline bool is_position_free(int i, int j) const
     {
         return (occupant_id[i][j].first == EMPTY);
     }
