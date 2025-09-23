@@ -57,6 +57,7 @@ private:
         return score_added;
     }
 
+    /// Adds a residential building to the collision map, updates the score, and stores the coords
     void add_building(const Coords& point, const Residential& residential)
     {
         const auto utility_ids_within_range = collision_map.get_utility_ids_in_range(point, residential);
@@ -68,6 +69,7 @@ private:
         }
     }
 
+    /// Adds a utility building to the collision map, updates the score, and stores the coords
     void add_building(const Coords& point, const Utility& utility)
     {
         const auto residential_ids_within_range = collision_map.get_residential_ids_in_range(point, utility);
@@ -93,6 +95,7 @@ public:
         , next_constr_id(0)
     {}
 
+    /// Returns the points gained by adding the building at the given coords
     int get_points_by_addition(const Coords& point, int project_id)
     {
         const auto& building_project = data.buildings[project_id].get();
@@ -108,6 +111,7 @@ public:
         }
     }
 
+    /// Adds a building to the collision map, updates the score, and stores the coords
     void add_building(const Coords& point, int project_id)
     {
         // Store the top-left corner of the building

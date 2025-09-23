@@ -16,6 +16,8 @@ class CollisionMap
     std::unique_ptr<std::unique_ptr<RealIdAndProjectId []>[]> occupant_id;
     std::map<int, CoordSet> precomputed_offsets;
 
+    /// For a building project, returns the offsets of the positions around it, within a
+    /// radius of walking_distance
     [[nodiscard]] CoordSet get_all_offsets_in_range(const BuildingProject& building_project) const
     {
         CoordSet offsets;
@@ -37,11 +39,9 @@ class CollisionMap
         return offsets;
     }
 
+    /// Computes and stores the offsets of the positions around each building project
     void precompute_offsets()
     {
-//        omp_set_num_threads(12);
-//        #pragma omp parallel for
-// stuff inside is 'destructive' therefore it gotta be made parallel with more care
         for (int project_id = 0; project_id < data.nr_building_projects; ++project_id)
         {
             const auto& building_project = data.buildings[project_id];
@@ -50,36 +50,6 @@ class CollisionMap
     }
 
     /// Returns all coordinates in walking distance of the given building project
-//    [[nodiscard]] CoordSet get_all_coords_in_range(const Coords& point, const BuildingProject& building_project) const
-//    {
-//        CoordSet coords;
-//        // changing to outer_walls
-//        for (const auto& center : building_project.outer_walls)
-//        {
-//            for (int i_dist = -walking_distance; i_dist <= walking_distance; ++i_dist)
-//            {
-//                const int i = center.first + point.first + i_dist;
-//
-//                // Invalid row
-//                if (i < 0 || i >= height)
-//                    continue;
-//
-//                const int j_limit = walking_distance - abs(i_dist);
-//
-//                for (int j_dist = -j_limit; j_dist <= j_limit; ++j_dist)
-//                {
-//                    const int j = center.second + point.second + j_dist;
-//
-//                    // Invalid column
-//                    if (j < 0 || j >= width)
-//                        continue;
-//
-//                    coords.emplace(i, j);
-//                }
-//            }
-//        }
-//        return coords;
-//    }
     [[nodiscard]] CoordSet get_all_coords_in_range(const Coords& point, const BuildingProject& building_project) const
     {
         CoordSet coords;
@@ -134,6 +104,7 @@ public:
         });
     }
 
+    /// Adds a building to the collision map
     void place_building(const Coords& point, RealIdAndProjectId construction_id)
     {
         const auto& building_project = data.buildings[construction_id.second];
@@ -160,6 +131,7 @@ public:
         }
     }
 
+    /// For the given building and coords, returns all residential ids within walkable range
     [[nodiscard]] ConstrIdSet get_residential_ids_in_range(const Coords& point, const BuildingProject& building_project) const
     {
         const auto coords_within_range = get_all_coords_in_range(point, building_project);
@@ -174,6 +146,7 @@ public:
         return result;
     }
 
+    /// For the given building and coords, returns all utility ids within walkable range
     [[nodiscard]] ConstrIdSet get_utility_ids_in_range(const Coords& point, const BuildingProject& building_project) const
     {
         const auto coords_within_range = get_all_coords_in_range(point, building_project);

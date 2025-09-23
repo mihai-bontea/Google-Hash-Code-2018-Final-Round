@@ -14,6 +14,8 @@ private:
     SimulationState simulation_state;
     const std::chrono::steady_clock::time_point start;
 
+    /// For the given position, returns a <best_id, best_score> pair, where best_id is the id of
+    /// the building that would yield the most points if placed there
     std::pair<int, int> choose_best_building_for_position(Coords point)
     {
         int best_id = -1, best_score = -1;
@@ -41,6 +43,7 @@ private:
         return {best_id, best_score};
     }
 
+    /// Returns a vector containing <project_id, coords> pairs of the chosen buildings
     std::vector<std::pair<int, Coords>> get_processed_results()
     {
         std::vector<std::pair<int, Coords>> results;
@@ -59,7 +62,7 @@ public:
         , start(std::chrono::steady_clock::now())
     {}
 
-    std::vector<std::pair<int, Coords>> solve()
+    std::pair<long long, std::vector<std::pair<int, Coords>>> solve()
     {
         for (int i = 0; i < data.city_height; ++i)
         {
@@ -86,10 +89,8 @@ public:
 
         const auto now = std::chrono::steady_clock::now();
         const auto elapsed = duration_cast<std::chrono::minutes>(now - start);
+        std::cout << "Obtained a solution in " << elapsed.count() << " minutes.\n";
 
-        std::cout << "Placed " << simulation_state.chosen_buildings.size() << " buildings. Score = "
-            << simulation_state.total_score << ". Time = " << elapsed.count() << " minutes.\n";
-
-        return get_processed_results();
+        return {simulation_state.total_score, get_processed_results()};
     }
 };

@@ -39,7 +39,8 @@ struct Data
             for (int i = 0; i < height; ++i)
                 for (int j = 0; j < width; ++j)
                     if (project_map[i][j] == '#' && (i == 0 || i == height - 1 || j == 0 || j == width - 1 ||
-                    project_map[i - 1][j] == '.' || project_map[i][j - 1] == '.' || project_map[i + 1][j] == '.' || project_map[i][j + 1] == '.'))
+                    project_map[i - 1][j] == '.' || project_map[i][j - 1] == '.' || project_map[i + 1][j] == '.'
+                    || project_map[i][j + 1] == '.'))
                         outer_walls.emplace_back(i, j);
 
             return std::make_pair(walls, outer_walls);
