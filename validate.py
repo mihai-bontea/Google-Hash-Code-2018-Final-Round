@@ -46,37 +46,24 @@ def validate_no_building_overlap(buildings, solution):
     assert(len(walls) == len(set(walls)))
 
 def get_all_coords_in_range(point, building, walking_distance, height, width):
-    coords = set()
-    px, py = point
-
-    for cx, cy in building.walls:
-        for i_dist in range(-walking_distance, walking_distance + 1):
-            i = cx + px + i_dist
-
-            if i < 0 or i >= height:
-                continue
-
-            j_limit = walking_distance - abs(i_dist)
-
-            for j_dist in range(-j_limit, j_limit + 1):
-                j = cy + py + j_dist
-
-                if j < 0 or j >= width:
-                    continue
-
-                coords.add((i, j))
-
-    return coords
+    return {
+        (i, j)
+        for cx, cy in building.walls
+        for i_dist in range(-walking_distance, walking_distance + 1)
+        for j_dist in range(-(walking_distance - abs(i_dist)),
+                            walking_distance - abs(i_dist) + 1)
+        if 0 <= (i := cx + point[0] + i_dist) < height
+        if 0 <= (j := cy + point[1] + j_dist) < width
+    }
 
 def get_unique_utility_types_in_range(city_map, buildings, point, residential_building, walking_distance, height, width):
     coords_to_check = get_all_coords_in_range(point, residential_building, walking_distance, height, width)
+    return {
+        buildings[city_map[i, j]].res_or_type
+        for i, j in coords_to_check
+        if city_map[i, j] != -1
+    }
 
-    utility_types = set()
-    for i, j in coords_to_check:
-        if city_map[i, j] != -1:
-            utility_types.add(buildings[city_map[i, j]].res_or_type)
-    
-    return utility_types
 
 def compute_score(height, width, max_walking_dist, buildings, solution):
     # Initialize a height x width map with -1
