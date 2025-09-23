@@ -66,9 +66,11 @@ def get_all_coords_in_range(point, building, walking_distance, height, width):
 
                 coords.add((i, j))
 
+    # print("Returning coords")
     return coords
 
 def get_unique_utility_types_in_range(city_map, buildings, point, residential_building, walking_distance, height, width):
+    # print("da")
     coords_to_check = get_all_coords_in_range(point, residential_building, walking_distance, height, width)
 
     utility_types = set()
@@ -76,6 +78,7 @@ def get_unique_utility_types_in_range(city_map, buildings, point, residential_bu
         if city_map[i, j] != -1:
             utility_types.add(buildings[city_map[i, j]].res_or_type)
     
+    # print("returning utility types")
     return utility_types
 
 def compute_score(height, width, max_walking_dist, buildings, solution):
@@ -89,17 +92,16 @@ def compute_score(height, width, max_walking_dist, buildings, solution):
         for i, j in building.walls:
             city_map[i + coords[0], j + coords[1]] = utility_id
     
-    # For each residential building, get the utility ids in walkable range
-    # get the unique utility types; calculate score
-    score = 0
+    score = nr_utilities = 0
     res_ids  = [(b_id, coord) for b_id, coord in solution.id_at_coord if buildings[b_id].kind == "R"]
     for residential_id, coords in res_ids:
         building = buildings[residential_id]
 
         utility_types = get_unique_utility_types_in_range(city_map, buildings, coords, building, max_walking_dist, height, width)
+        nr_utilities += len(utility_types)
         score += building.res_or_type * len(utility_types)
     
-    return score
+    return score, nr_utilities / len(res_ids)
 
 solutions = ["sol1"]
 input_files = ["a_example", "b_short_walk", "c_going_green", "d_wide_selection", "e_precise_fit", "f_different_footprints"]
@@ -109,12 +111,20 @@ for input_file in input_files:
         city_height, city_width, max_walking_dist, nr_building_projects = list(map(int, f.readline().split()))
         buildings = [read_building(f) for _ in range(nr_building_projects)]
 
-        for solution in solutions:
-            output_file = f"output_files/{solution}/{input_file}.out"
+        for sol in solutions:
+            output_file = f"output_files/{sol}/{input_file}.out"
             try:
                 solution = read_solution(output_file)
 
+                # The buildings in the output file should have no overlapping walls
                 validate_no_building_overlap(buildings, solution)
+
+                # Obtain the percentage of the grid covered by walls
+                coverage = sum(len(buildings[project_id].walls) for project_id, _ in solution.id_at_coord)
+                coverage_percentage = coverage * 100 / (city_height * city_width)
+
+                score, avg_utility_per_res = compute_score(city_height, city_width, max_walking_dist, buildings, solution)
+                print(f"Score: {score}, average utility per residential building: {avg_utility_per_res}, coverage percentage = {coverage_percentage}")
 
             except FileNotFoundError:
                 print(f"Error: File '{output_file}' not found.")
