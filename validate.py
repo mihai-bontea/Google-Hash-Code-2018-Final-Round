@@ -87,6 +87,7 @@ def compute_score(height, width, max_walking_dist, buildings, solution):
     return score, nr_utilities / len(res_ids)
 
 solutions = ["sol1"]
+scores = {key: {} for key in solutions}
 input_files = ["a_example", "b_short_walk", "c_going_green", "d_wide_selection", "e_precise_fit", "f_different_footprints"]
 
 for input_file in input_files:
@@ -106,8 +107,18 @@ for input_file in input_files:
                 coverage = sum(len(buildings[project_id].walls) for project_id, _ in solution.id_at_coord)
                 coverage_percentage = coverage * 100 / (city_height * city_width)
 
+                # Obtain the score and average unique utilities available per residential building
                 score, avg_utility_per_res = compute_score(city_height, city_width, max_walking_dist, buildings, solution)
-                print(f"Score: {score}, average utility per residential building: {avg_utility_per_res}, coverage percentage = {coverage_percentage}")
+                scores[sol][input_file] = (score, avg_utility_per_res, coverage_percentage)
 
             except FileNotFoundError:
                 print(f"Error: File '{output_file}' not found.")
+
+for solution, input_to_score in scores.items():
+    print(f"For {solution}:")
+
+    final_score = 0
+    for input_file, (score, avg_utility_per_res, coverage_percentage) in input_to_score.items():
+        print(f"--->{input_file}: {score:,} score, {avg_utility_per_res:.1f} average utility access, {coverage_percentage:.1f}% coverage.")
+        final_score += score
+    print(f"Final score: {final_score:,}.\n")
