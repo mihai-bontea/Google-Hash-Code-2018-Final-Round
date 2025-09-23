@@ -64,17 +64,16 @@ def get_unique_utility_types_in_range(city_map, buildings, point, residential_bu
         if city_map[i, j] != -1
     }
 
-
 def compute_score(height, width, max_walking_dist, buildings, solution):
     # Initialize a height x width map with -1
     city_map = np.full((height, width), -1, dtype=int)
 
     # Place the utility buildings on the map
-    util_ids = [(b_id, coord) for b_id, coord in solution.id_at_coord if buildings[b_id].kind == "U"]
-    for utility_id, coords in util_ids:
-        building = buildings[utility_id]
-        for i, j in building.walls:
-            city_map[i + coords[0], j + coords[1]] = utility_id
+    for utility_id, (x, y) in solution.id_at_coord:
+        if buildings[utility_id].kind == "U":
+            for i, j in buildings[utility_id].walls:
+                city_map[i + x, j + y] = utility_id
+
     
     score = nr_utilities = 0
     res_ids  = [(b_id, coord) for b_id, coord in solution.id_at_coord if buildings[b_id].kind == "R"]
