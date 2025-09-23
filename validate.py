@@ -74,15 +74,13 @@ def compute_score(height, width, max_walking_dist, buildings, solution):
             for i, j in buildings[utility_id].walls:
                 city_map[i + x, j + y] = utility_id
 
-    
     score = nr_utilities = 0
     res_ids  = [(b_id, coord) for b_id, coord in solution.id_at_coord if buildings[b_id].kind == "R"]
     for residential_id, coords in res_ids:
-        building = buildings[residential_id]
-
-        utility_types = get_unique_utility_types_in_range(city_map, buildings, coords, building, max_walking_dist, height, width)
+        utility_types = get_unique_utility_types_in_range(
+            city_map, buildings, coords, buildings[residential_id], max_walking_dist, height, width)
         nr_utilities += len(utility_types)
-        score += building.res_or_type * len(utility_types)
+        score += buildings[residential_id].res_or_type * len(utility_types)
     
     return score, nr_utilities / len(res_ids)
 
