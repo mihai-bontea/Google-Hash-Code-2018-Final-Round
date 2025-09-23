@@ -74,6 +74,8 @@ def compute_score(height, width, max_walking_dist, buildings, solution):
             for i, j in buildings[utility_id].walls:
                 city_map[i + x, j + y] = utility_id
 
+    # For each residential building, determine the score based on the amount of unique utility types
+    # it has access to within walkable range
     score = nr_utilities = 0
     res_ids  = [(b_id, coord) for b_id, coord in solution.id_at_coord if buildings[b_id].kind == "R"]
     for residential_id, coords in res_ids:
