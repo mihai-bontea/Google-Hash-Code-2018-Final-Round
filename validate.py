@@ -66,11 +66,9 @@ def get_all_coords_in_range(point, building, walking_distance, height, width):
 
                 coords.add((i, j))
 
-    # print("Returning coords")
     return coords
 
 def get_unique_utility_types_in_range(city_map, buildings, point, residential_building, walking_distance, height, width):
-    # print("da")
     coords_to_check = get_all_coords_in_range(point, residential_building, walking_distance, height, width)
 
     utility_types = set()
@@ -78,7 +76,6 @@ def get_unique_utility_types_in_range(city_map, buildings, point, residential_bu
         if city_map[i, j] != -1:
             utility_types.add(buildings[city_map[i, j]].res_or_type)
     
-    # print("returning utility types")
     return utility_types
 
 def compute_score(height, width, max_walking_dist, buildings, solution):
