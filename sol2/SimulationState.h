@@ -11,6 +11,7 @@ private:
 
     size_t next_constr_id;
     std::unordered_map<size_t, std::unordered_map<int, std::vector<size_t>>> res_id_to_utility_by_type;
+    std::unordered_map<size_t, int> id_to_score_gained;
 
     std::unordered_set<int> get_utility_types(const ConstrIdSet& utility_ids)
     {
@@ -112,10 +113,13 @@ public:
     }
 
     /// Adds a building to the collision map, updates the score, and stores the coords
-    void add_building(const Coords& point, int project_id)
+    void add_building(const Coords& point, int project_id, int score_gained)
     {
         // Store the top-left corner of the building
         chosen_buildings[next_constr_id] = point;
+
+        // Store the score increase from this project
+        id_to_score_gained[next_constr_id] = score_gained;
 
         // Link the real construction id to the project_id
         constr_id_to_project_id[next_constr_id] = project_id;
@@ -137,5 +141,37 @@ public:
 
         // Increment the id
         ++next_constr_id;
+    }
+
+    /// Removes a residential building to the collision map, updates the score, and stores the coords
+    void remove_building(const Coords& point, size_t construction_id)
+    {
+        const int project_id = constr_id_to_project_id[construction_id];
+        const auto& building_project = data.buildings[project_id].get();
+        if (building_project->get_type() == ProjectType::Residential)
+        {
+            res_id_to_utility_by_type.erase(construction_id);
+        }
+        else
+        {
+            const auto utility_ptr = dynamic_cast<const Utility*>(building_project);
+            const auto residential_ids_within_range = collision_map.get_residential_ids_in_range(point, *utility_ptr);
+            for (auto [real_id, residential_id] : residential_ids_within_range)
+            {
+                auto& utility_by_type = res_id_to_utility_by_type[real_id];
+                auto& utility_for_type = utility_by_type[utility_ptr->utility_type];
+                utility_for_type.erase(std::remove(utility_for_type.begin(), utility_for_type.end(), construction_id));
+            }
+
+        }
+        total_score -= id_to_score_gained[construction_id];
+
+        Coords coords = chosen_buildings[construction_id];
+        chosen_buildings.erase(construction_id);
+
+        id_to_score_gained.erase(construction_id);
+        constr_id_to_project_id.erase(construction_id);
+
+        collision_map.remove_building(coords, project_id);
     }
 };

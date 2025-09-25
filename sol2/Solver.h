@@ -83,7 +83,7 @@ public:
                 simulation_state.total_score += score_increase;
 
                 // Update building states
-                simulation_state.add_building({i, j}, best_id);
+                simulation_state.add_building({i, j}, best_id, score_increase);
             }
         }
 
