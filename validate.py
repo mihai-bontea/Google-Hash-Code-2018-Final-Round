@@ -86,7 +86,7 @@ def compute_score(height, width, max_walking_dist, buildings, solution):
     
     return score, nr_utilities / len(res_ids)
 
-solutions = ["sol1"]
+solutions = ["sol1", "sol2"]
 scores = {key: {} for key in solutions}
 input_files = ["a_example", "b_short_walk", "c_going_green", "d_wide_selection", "e_precise_fit", "f_different_footprints"]
 

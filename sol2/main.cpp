@@ -24,6 +24,9 @@ int main()
     unsigned long long total_score = 0;
     for (const auto& input_file : input_files)
     {
+        if (input_file == "a_example.in")
+            continue;
+
         Data data(in_prefix + input_file);
         std::cout << "Successfully read input file.\n";
         Solver solver(data);
