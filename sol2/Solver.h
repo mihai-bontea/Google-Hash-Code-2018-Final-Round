@@ -1,6 +1,8 @@
 #pragma once
 
 #include <chrono>
+#include <random>
+#include <iterator>
 #include <unordered_map>
 
 #include <omp.h>
@@ -13,6 +15,13 @@ private:
     const Data& data;
     SimulationState simulation_state;
     const std::chrono::steady_clock::time_point start;
+
+    bool is_timer_expired()
+    {
+        const auto now = std::chrono::steady_clock::now();
+        auto elapsed = duration_cast<std::chrono::minutes>(now - start);
+        return elapsed.count() >= 15;
+    }
 
     /// For the given position, returns a <best_id, best_score> pair, where best_id is the id of
     /// the building that would yield the most points if placed there
@@ -54,15 +63,7 @@ private:
         return results;
     }
 
-public:
-
-    explicit Solver(const Data& data)
-            : data(data)
-            , simulation_state(data)
-            , start(std::chrono::steady_clock::now())
-    {}
-
-    std::pair<long long, std::vector<std::pair<int, Coords>>> solve()
+    void solve_greedy()
     {
         for (int i = 0; i < data.city_height; ++i)
         {
@@ -79,18 +80,57 @@ public:
                 if (best_id == -1)
                     continue;
 
-                // Update score and collision map
-                simulation_state.total_score += score_increase;
-
                 // Update building states
                 simulation_state.add_building({i, j}, best_id, score_increase);
             }
         }
+    }
 
-        const auto now = std::chrono::steady_clock::now();
-        const auto elapsed = duration_cast<std::chrono::minutes>(now - start);
-        std::cout << "Obtained a solution in " << elapsed.count() << " minutes.\n";
+    std::pair<size_t, Coords> choose_random_building_id_and_coords()
+    {
+        std::mt19937 rng(std::random_device{}());
+        std::uniform_int_distribution<> dist(0, simulation_state.chosen_buildings.size() - 1);
 
-        return {simulation_state.total_score, get_processed_results()};
+        int k = dist(rng);
+        auto it = std::next(simulation_state.chosen_buildings.begin(), k);
+
+        return *it;
+    }
+
+public:
+
+    explicit Solver(const Data& data)
+            : data(data)
+            , simulation_state(data)
+            , start(std::chrono::steady_clock::now())
+    {}
+
+    std::pair<long long, std::vector<std::pair<int, Coords>>> solve()
+    {
+        solve_greedy();
+
+        while (!is_timer_expired())
+        {
+            // Pick random building and delete it
+            const auto [construction_id, coords] = choose_random_building_id_and_coords();
+            const int old_score = simulation_state.id_to_score_gained[construction_id];
+            simulation_state.remove_building(coords, construction_id);
+
+            // Find the building that would yield the highest score for this position
+            const auto [best_id, score_increase] = choose_best_building_for_position(coords);
+
+            if (score_increase > old_score)
+                std::cout << "Increased score from " << old_score << " to " << score_increase << std::endl;
+
+            // No building fits here, move on
+            if (best_id == -1)
+                continue;
+
+            // Update building states
+            simulation_state.add_building(coords, best_id, score_increase);
+        }
+
+        auto results = get_processed_results();
+        return {simulation_state.total_score, results};
     }
 };
