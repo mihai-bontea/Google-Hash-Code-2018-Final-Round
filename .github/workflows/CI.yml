@@ -16,13 +16,19 @@ jobs:
 
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install -y cmake build-essential
-
+    
     - name: Find all solutions
       id: find_solutions
       run: |
-        # Find all subfolders with a CMakeLists.txt
-        solutions=$(find . -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/CMakeLists.txt" \; -print)
-        echo "solutions=$solutions" >> $GITHUB_ENV
+        rm -f $GITHUB_ENV
+
+        solutions_list=""
+        for dir in */; do
+          if [ -f "$dir/CMakeLists.txt" ]; then
+            dir_name="${dir%/}"
+            solutions_list="$solutions_list $dir_name"
+          fi
+        done
 
     - name: Build each solution
       run: |
