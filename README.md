@@ -28,10 +28,9 @@ Go over the city map in order, and at every step, choose the best scoring buildi
 
 ## Solution 2
 
-Builds on the first solution; a greedy solution is obtained, and then a hill climbing algorithm is performed (tied to a 10 minute timer). Random buildings are removed and replaced with a better scoring building (if it's not already the best for that position).
-
 ### Strategy
 
+Builds on the first solution; a greedy solution is obtained, and then a hill climbing algorithm is performed (tied to a 10 minute timer). Random buildings are removed and replaced with a better scoring building (if it's not already the best for that position).
 
 ### Scoring
 
