@@ -11,6 +11,8 @@ order to maximize residential capacity and availability of utilities to resident
 
 ### Strategy
 
+Go over the city map in order, and at every step, choose the best scoring building that fits into the given space. A collision map ensures that no buildings overlap. The process of choosing the best building at every step is computationally intensive, so it's split on 12 parallel threads.
+
 ### Scoring
 
 | File Name              |      Score | Avg Utility Access | Coverage % |
@@ -25,6 +27,8 @@ order to maximize residential capacity and availability of utilities to resident
 
 
 ## Solution 2
+
+Builds on the first solution; a greedy solution is obtained, and then a hill climbing algorithm is performed (tied to a 10 minute timer). Random buildings are removed and replaced with a better scoring building (if it's not already the best for that position).
 
 ### Strategy
 
