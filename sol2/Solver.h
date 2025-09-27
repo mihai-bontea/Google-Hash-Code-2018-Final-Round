@@ -119,9 +119,6 @@ public:
             // Find the building that would yield the highest score for this position
             const auto [best_id, score_increase] = choose_best_building_for_position(coords);
 
-            if (score_increase > old_score)
-                std::cout << "Increased score from " << old_score << " to " << score_increase << std::endl;
-
             // No building fits here, move on
             if (best_id == -1)
                 continue;
@@ -130,7 +127,7 @@ public:
             simulation_state.add_building(coords, best_id, score_increase);
         }
 
-        auto results = get_processed_results();
+        const auto results = get_processed_results();
         return {simulation_state.total_score, results};
     }
 };

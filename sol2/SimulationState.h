@@ -8,10 +8,8 @@ class SimulationState
 {
 private:
     const Data& data;
-
     size_t next_constr_id;
     std::unordered_map<size_t, std::unordered_map<int, std::vector<size_t>>> res_id_to_utility_by_type;
-//    std::unordered_map<size_t, int> id_to_score_gained;
 
     std::unordered_set<int> get_utility_types(const ConstrIdSet& utility_ids)
     {
@@ -83,14 +81,9 @@ private:
 
 public:
     CollisionMap collision_map;
-
     unsigned long long total_score = 0;
-
     std::unordered_map<size_t, Coords> chosen_buildings;
-
-    std::unordered_map<size_t, int> constr_id_to_project_id;
-
-    std::unordered_map<size_t, int> id_to_score_gained;
+    std::unordered_map<size_t, int> constr_id_to_project_id, id_to_score_gained;
 
     explicit SimulationState(const Data& data)
             : data(data)
