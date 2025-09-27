@@ -1,0 +1,37 @@
+name: Build C++ Solutions
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+
+    - name: Find all solutions
+      id: find_solutions
+      run: |
+        # Find all subfolders with a CMakeLists.txt
+        solutions=$(find . -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/CMakeLists.txt" \; -print)
+        echo "solutions=$solutions" >> $GITHUB_ENV
+
+    - name: Build each solution
+      run: |
+        for sol in $solutions; do
+          echo "Building $sol"
+          mkdir -p "$sol/build"
+          cd "$sol/build"
+          cmake ..
+          make -j$(nproc)
+          cd ../../
+        done
+
