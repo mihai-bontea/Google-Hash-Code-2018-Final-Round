@@ -1,5 +1,12 @@
 # Google Hash Code 2018 Final Round (City Plan)
 
+>The population of the world is growing and becoming increasingly concentrated in cities. According to the World Bank, global urbanization (the percentage of the world’s population that lives in cities) crossed 50% in 2008 and reached 54% in 2016¹.
+
+>The growth of urban areas creates interesting architectural challenges. How can city planners make efficient use of urban space? How should residential needs be balanced with access to public utilities, such as schools and parks?
+
+>**Given a set of building projects, your task is to decide which of the available projects to build and where, in
+order to maximize residential capacity and availability of utilities to residents.**
+
 ## Solution 1
 
 ### Strategy
@@ -33,3 +40,9 @@
 | e_precise_fit          |  4,794,080 |                1.0 |       99.5 |
 | f_different_footprints |  5,065,367 |                6.5 |       99.6 |
 | **Final**              | 30,343,556 |                    |            |
+
+## Visualizer
+
+The visualizer script reads the input and output files, and creates a visual representation of the solutions. The validator script checks that the solutions satisfy the requirements, and computes the score, average utility access, and coverage percentage(density).
+
+<img width="773" height="446" alt="Image" src="https://github.com/user-attachments/assets/efc4f968-8071-4ee6-8cfd-36ddc0098604" />
