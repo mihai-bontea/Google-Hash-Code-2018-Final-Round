@@ -1,6 +1,8 @@
-import matplotlib.pyplot as plt
 from dataclasses import dataclass
 from typing import List, Tuple
+
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import numpy as np
 
 @dataclass
@@ -49,9 +51,9 @@ def visualize_map(height, width, buildings, placements, output_path):
             if 0 <= i < height and 0 <= j < width:
                 grid[i, j] = b_id
                 if building.kind == "R":
-                    color_map[i, j] = [0.2, 0.6, 1.0]
+                    color_map[i, j] = mcolors.to_rgb("turquoise")
                 else:
-                    color_map[i, j] = [1.0, 0.6, 0.2]
+                    color_map[i, j] = mcolors.to_rgb("slateblue")
 
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.imshow(color_map, origin="upper")
