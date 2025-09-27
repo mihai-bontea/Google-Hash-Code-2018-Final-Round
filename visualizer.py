@@ -71,9 +71,6 @@ def visualize_map(height, width, buildings, placements, output_path):
 solutions = ["sol1", "sol2"]
 input_files = ["a_example", "b_short_walk", "c_going_green", "d_wide_selection", "e_precise_fit", "f_different_footprints"]
 
-import os
-print("Current working dir:", os.getcwd())
-
 for input_file in input_files:
     with open(f"input_files/{input_file}.in", 'r') as f:
         city_height, city_width, max_walking_dist, nr_building_projects = list(map(int, f.readline().split()))
