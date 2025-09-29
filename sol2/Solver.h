@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <chrono>
 #include <random>
 #include <iterator>
@@ -25,9 +26,9 @@ private:
 
     /// For the given position, returns a <best_id, best_score> pair, where best_id is the id of
     /// the building that would yield the most points if placed there
-    std::pair<int, int> choose_best_building_for_position(Coords point)
+    std::pair<int, int> choose_best_building_for_position(Coords point, float size_penalty)
     {
-        int best_id = -1, best_score = -1;
+        int best_id = -1, best_score = -1, best_adjusted_score = -1;
 
         omp_set_num_threads(12);
         #pragma omp parallel for
@@ -39,11 +40,13 @@ private:
 
             // Score improvement, save the project id
             const int score_gain = simulation_state.get_points_by_addition(point, project_id);
+            const int adjusted_gain = std::max(0, score_gain - (int)(size_penalty * data.buildings[project_id]->walls.size()));
 
             #pragma omp critical
             {
-                if (score_gain > best_score)
+                if (adjusted_gain > best_adjusted_score)
                 {
+                    best_adjusted_score = adjusted_gain;
                     best_score = score_gain;
                     best_id = project_id;
                 }
@@ -74,7 +77,7 @@ private:
                     continue;
 
                 // Find the building that would yield the highest score for this position
-                const auto [best_id, score_increase] = choose_best_building_for_position({i, j});
+                const auto [best_id, score_increase] = choose_best_building_for_position({i, j}, 1.5);
 
                 // No building fits here, move on
                 if (best_id == -1)
@@ -105,7 +108,7 @@ public:
             , start(std::chrono::steady_clock::now())
     {}
 
-    std::pair<long long, std::vector<std::pair<int, Coords>>> solve()
+    std::vector<std::pair<int, Coords>> solve()
     {
         solve_greedy();
 
@@ -117,7 +120,7 @@ public:
             simulation_state.remove_building(coords, construction_id);
 
             // Find the building that would yield the highest score for this position
-            const auto [best_id, score_increase] = choose_best_building_for_position(coords);
+            const auto [best_id, score_increase] = choose_best_building_for_position(coords, 0);
 
             // No building fits here, move on
             if (best_id == -1)
@@ -127,7 +130,6 @@ public:
             simulation_state.add_building(coords, best_id, score_increase);
         }
 
-        const auto results = get_processed_results();
-        return {simulation_state.total_score, results};
+        return get_processed_results();
     }
 };
