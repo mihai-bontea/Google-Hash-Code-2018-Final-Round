@@ -30,19 +30,20 @@ Go over the city map in order, and at every step, choose the best scoring buildi
 
 ### Strategy
 
-Builds on the first solution; a greedy solution is obtained, and then a hill climbing algorithm is performed (tied to a 10 minute timer). Random buildings are removed and replaced with a better scoring building (if it's not already the best for that position).
+Builds on the first solution; a greedy solution is obtained(although now buildings are penalized proportionally with size), and then a hill climbing algorithm is performed (tied to a 10 minute timer). Random buildings are removed and replaced with a better scoring building (if it's not already the best for that position).
 
 ### Scoring
 
 | File Name              |      Score | Avg Utility Access | Coverage % |
 | ---------------------- | ---------: | -----------------: | ---------: |
 | a_example              |        100 |                2.0 |       71.4 |
-| b_short_walk           |  3,848,258 |                6.9 |       96.8 |
-| c_going_green          |  9,022,269 |               12.5 |       99.4 |
-| d_wide_selection       |  7,613,482 |               16.3 |       93.5 |
-| e_precise_fit          |  4,794,080 |                1.0 |       99.5 |
-| f_different_footprints |  5,065,367 |                6.5 |       99.6 |
-| **Final**              | 30,343,556 |                    |            |
+| b_short_walk           |  4,891,374 |                8.3 |       98.2 |
+| c_going_green          |  8,479,026 |               11.6 |       99.7 |
+| d_wide_selection       |  7,625,246 |               16.4 |       93.6 |
+| e_precise_fit          |  4,798,930 |                1.0 |       99.5 |
+| f_different_footprints |  7,020,472 |                5.9 |       99.9 |
+| **Final**              | 32,815,148 |                    |            |
+
 
 ## Visualizer
 
