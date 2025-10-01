@@ -81,9 +81,8 @@ private:
 
 public:
     CollisionMap collision_map;
-    unsigned long long total_score = 0;
     std::unordered_map<size_t, Coords> chosen_buildings;
-    std::unordered_map<size_t, int> constr_id_to_project_id, id_to_score_gained;
+    std::unordered_map<size_t, int> constr_id_to_project_id;
 
     explicit SimulationState(const Data& data)
             : data(data)
@@ -112,10 +111,6 @@ public:
     {
         // Store the top-left corner of the building
         chosen_buildings[next_constr_id] = point;
-
-        // Store the score increase from this project, and update total score
-        id_to_score_gained[next_constr_id] = score_gained;
-        total_score += score_gained;
 
         // Link the real construction id to the project_id
         constr_id_to_project_id[next_constr_id] = project_id;
@@ -160,13 +155,10 @@ public:
             }
 
         }
-        // Update score
-        total_score -= id_to_score_gained[construction_id];
 
         Coords coords = chosen_buildings[construction_id];
         chosen_buildings.erase(construction_id);
 
-        id_to_score_gained.erase(construction_id);
         constr_id_to_project_id.erase(construction_id);
 
         collision_map.remove_building(coords, project_id);

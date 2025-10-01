@@ -10,12 +10,24 @@
 
 #include "SimulationState.h"
 
+struct Result {
+    int id;
+    int score;
+    int adjusted;
+};
+
+#pragma omp declare reduction(merge_best : Result : \
+    omp_out = (omp_in.adjusted > omp_out.adjusted ? omp_in : omp_out)) \
+    initializer(omp_priv = {-1, -1, -1})
+
 class Solver
 {
 private:
     const Data& data;
     SimulationState simulation_state;
     const std::chrono::steady_clock::time_point start;
+
+    std::vector<short> building_size;
 
     inline bool is_timer_expired()
     {
@@ -28,10 +40,10 @@ private:
     /// the building that would yield the most points if placed there
     std::pair<int, int> choose_best_building_for_position(Coords point, float size_penalty)
     {
-        int best_id = -1, best_score = -1, best_adjusted_score = -1;
+        Result best = {-1, -1, -1};
 
         omp_set_num_threads(12);
-        #pragma omp parallel for
+        #pragma omp parallel for reduction(merge_best:best)
         for (int project_id = 0; project_id < data.nr_building_projects; ++project_id)
         {
             // This building doesn't fit in the given space
@@ -40,19 +52,13 @@ private:
 
             // Score improvement, save the project id
             const int score_gain = simulation_state.get_points_by_addition(point, project_id);
-            const int adjusted_gain = std::max(0, score_gain - (int)(size_penalty * data.buildings[project_id]->walls.size()));
+            const int adjusted_gain = std::max(0, score_gain - (int)(size_penalty * building_size[project_id]));
+            Result candidate{project_id, score_gain, adjusted_gain};
 
-            #pragma omp critical
-            {
-                if (adjusted_gain > best_adjusted_score)
-                {
-                    best_adjusted_score = adjusted_gain;
-                    best_score = score_gain;
-                    best_id = project_id;
-                }
-            }
+            if (candidate.adjusted > best.adjusted)
+                best = candidate;
         }
-        return {best_id, best_score};
+        return {best.id, best.score};
     }
 
     /// Returns a vector containing <project_id, coords> pairs of the chosen buildings
@@ -106,7 +112,12 @@ public:
             : data(data)
             , simulation_state(data)
             , start(std::chrono::steady_clock::now())
-    {}
+            , building_size(data.nr_building_projects, 0)
+    {
+        // This will improve cache locality in the "hot spot" parallel function
+        for (int project_id = 0; project_id < data.nr_building_projects; ++project_id)
+            building_size[project_id] = data.buildings[project_id]->walls.size();
+    }
 
     std::vector<std::pair<int, Coords>> solve()
     {
@@ -116,7 +127,6 @@ public:
         {
             // Pick random building and delete it
             const auto [construction_id, coords] = choose_random_building_id_and_coords();
-            const int old_score = simulation_state.id_to_score_gained[construction_id];
             simulation_state.remove_building(coords, construction_id);
 
             // Find the building that would yield the highest score for this position
