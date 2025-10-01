@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <cmath>
 #include <memory>
 #include <vector>
 #include <cstring>
@@ -12,9 +13,9 @@
 class CollisionMap
 {
     const Data& data;
-    int height, width, walking_distance;
-    std::unique_ptr<std::unique_ptr<RealIdAndProjectId []>[]> occupant_id;
-    std::map<int, CoordSet> precomputed_offsets;
+    int height, width, walking_distance, max_offsets_per_project;
+    std::vector<RealIdAndProjectId> occupant_id;
+    std::vector<CoordSet > precomputed_offsets;
 
     /// For a building project, returns the offsets of the positions around it, within a
     /// radius of walking_distance
@@ -46,6 +47,10 @@ class CollisionMap
         {
             const auto& building_project = data.buildings[project_id];
             precomputed_offsets[project_id] = get_all_offsets_in_range(*building_project.get());
+
+            // This value will be used to pre-allocate space for all the unordered_sets used, in order to avoid
+            // further rehashing. This value is guaranteed to be big enough to not require resizing the set
+            max_offsets_per_project = std::max(max_offsets_per_project, (int)precomputed_offsets[project_id].size());
         }
     }
 
@@ -53,7 +58,9 @@ class CollisionMap
     [[nodiscard]] CoordSet get_all_coords_in_range(const Coords& point, const BuildingProject& building_project) const
     {
         CoordSet coords;
-        const auto& offsets = precomputed_offsets.find(building_project.id)->second;
+        coords.reserve(max_offsets_per_project);
+
+        const auto& offsets = precomputed_offsets[building_project.id];
         for (const auto [i_off, j_off] : offsets)
         {
             const int i = i_off + point.first;
@@ -64,7 +71,6 @@ class CollisionMap
         }
         return coords;
     }
-
 
     [[nodiscard]] inline bool are_coords_valid(int i, int j) const
     {
@@ -77,16 +83,9 @@ public:
             , height(data.city_height)
             , width(data.city_width)
             , walking_distance(data.max_walking_dist)
+            , precomputed_offsets(data.nr_building_projects)
     {
-        occupant_id = std::make_unique<std::unique_ptr<RealIdAndProjectId []>[]>(height);
-
-        for (int i = 0; i < height; ++i)
-        {
-            occupant_id[i] = std::make_unique<RealIdAndProjectId []>(width);
-
-            for (int j = 0; j < width; ++j)
-                occupant_id[i][j] = {EMPTY, 0};
-        }
+        occupant_id = std::vector<RealIdAndProjectId>(height * width, {EMPTY, 0});
         precompute_offsets();
         std::cout << "Precomputed the offsets for every project.\n";
     }
@@ -100,7 +99,7 @@ public:
             const int adj_i = wall.first + point.first;
             const int adj_j = wall.second + point.second;
 
-            return are_coords_valid(adj_i, adj_j) && occupant_id[adj_i][adj_j].first == EMPTY;
+            return are_coords_valid(adj_i, adj_j) && occupant_id[adj_i * width + adj_j].first == EMPTY;
         });
     }
 
@@ -113,7 +112,7 @@ public:
             const int adj_i = i + point.first;
             const int adj_j = j + point.second;
 
-            occupant_id[adj_i][adj_j] = construction_id;
+            occupant_id[adj_i * width + adj_j] = construction_id;
         }
     }
 
@@ -126,7 +125,7 @@ public:
             const int adj_i = i + point.first;
             const int adj_j = j + point.second;
 
-            occupant_id[adj_i][adj_j] = {EMPTY, 0};
+            occupant_id[adj_i * width + adj_j] = {EMPTY, 0};
         }
     }
 
@@ -135,10 +134,11 @@ public:
     {
         const auto coords_within_range = get_all_coords_in_range(point, building_project);
         ConstrIdSet result;
+        result.reserve(coords_within_range.size());
 
         for (const auto [i, j] : coords_within_range)
         {
-            auto constr_id = occupant_id[i][j];
+            auto constr_id = occupant_id[i * width + j];
             if (constr_id.first != EMPTY && data.buildings[constr_id.second]->get_type() == ProjectType::Residential)
                 result.emplace(constr_id);
         }
@@ -150,10 +150,11 @@ public:
     {
         const auto coords_within_range = get_all_coords_in_range(point, building_project);
         ConstrIdSet result;
+        result.reserve(coords_within_range.size());
 
         for (const auto [i, j] : coords_within_range)
         {
-            auto constr_id = occupant_id[i][j];
+            auto constr_id = occupant_id[i * width + j];
             if (constr_id.first != EMPTY && data.buildings[constr_id.second]->get_type() == ProjectType::Utility)
                 result.emplace(constr_id);
         }
@@ -162,6 +163,6 @@ public:
 
     [[nodiscard]] inline bool is_position_free(int i, int j) const
     {
-        return (occupant_id[i][j].first == EMPTY);
+        return (occupant_id[i * width + j].first == EMPTY);
     }
 };

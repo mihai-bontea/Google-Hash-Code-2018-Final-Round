@@ -17,11 +17,11 @@ private:
     SimulationState simulation_state;
     const std::chrono::steady_clock::time_point start;
 
-    bool is_timer_expired()
+    inline bool is_timer_expired()
     {
         const auto now = std::chrono::steady_clock::now();
         auto elapsed = duration_cast<std::chrono::minutes>(now - start);
-        return elapsed.count() >= 15;
+        return elapsed.count() >= 4;
     }
 
     /// For the given position, returns a <best_id, best_score> pair, where best_id is the id of
