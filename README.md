@@ -23,7 +23,7 @@ Go over the city map in order, and at every step, choose the best scoring buildi
 | d_wide_selection       |  7,587,032 |               16.3 |       93.6 |
 | e_precise_fit          |  4,795,290 |                1.0 |       99.5 |
 | f_different_footprints |  4,940,263 |                6.4 |      100.0 |
-| **Final**              | 29,918,819 |                    |            |
+| **Final**              | **29,918,819** |                    |            |
 
 
 ## Solution 2
