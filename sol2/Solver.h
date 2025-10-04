@@ -10,40 +10,30 @@
 
 #include "SimulationState.h"
 
-struct Result {
-    int id;
-    int score;
-    int adjusted;
-};
-
-#pragma omp declare reduction(merge_best : Result : \
-    omp_out = (omp_in.adjusted > omp_out.adjusted ? omp_in : omp_out)) \
-    initializer(omp_priv = {-1, -1, -1})
-
 class Solver
 {
 private:
     const Data& data;
     SimulationState simulation_state;
     const std::chrono::steady_clock::time_point start;
-
     std::vector<short> building_size;
+    CoordsToStep last_modified;
 
     inline bool is_timer_expired()
     {
         const auto now = std::chrono::steady_clock::now();
         auto elapsed = duration_cast<std::chrono::minutes>(now - start);
-        return elapsed.count() >= 4;
+        return elapsed.count() >= 10;
     }
 
     /// For the given position, returns a <best_id, best_score> pair, where best_id is the id of
     /// the building that would yield the most points if placed there
     std::pair<int, int> choose_best_building_for_position(Coords point, float size_penalty)
     {
-        Result best = {-1, -1, -1};
+        int best_id = -1, best_score = -1, best_adjusted_score = -1;
 
-        omp_set_num_threads(12);
-        #pragma omp parallel for reduction(merge_best:best)
+        omp_set_num_threads(20);
+        #pragma omp parallel for
         for (int project_id = 0; project_id < data.nr_building_projects; ++project_id)
         {
             // This building doesn't fit in the given space
@@ -53,12 +43,18 @@ private:
             // Score improvement, save the project id
             const int score_gain = simulation_state.get_points_by_addition(point, project_id);
             const int adjusted_gain = std::max(0, score_gain - (int)(size_penalty * building_size[project_id]));
-            Result candidate{project_id, score_gain, adjusted_gain};
 
-            if (candidate.adjusted > best.adjusted)
-                best = candidate;
+            #pragma omp critical
+            {
+                if (adjusted_gain > best_adjusted_score)
+                {
+                    best_adjusted_score = adjusted_gain;
+                    best_score = score_gain;
+                    best_id = project_id;
+                }
+            }
         }
-        return {best.id, best.score};
+        return {best_id, best_score};
     }
 
     /// Returns a vector containing <project_id, coords> pairs of the chosen buildings
@@ -95,15 +91,20 @@ private:
         }
     }
 
-    std::pair<size_t, Coords> choose_random_building_id_and_coords()
+    std::pair<size_t, Coords> choose_random_building_id_and_coords(size_t simulation_step)
     {
         std::mt19937 rng(std::random_device{}());
         std::uniform_int_distribution<> dist(0, simulation_state.chosen_buildings.size() - 1);
 
-        int k = dist(rng);
-        auto it = std::next(simulation_state.chosen_buildings.begin(), k);
+        while (true)
+        {
+            const int k = dist(rng);
+            const size_t cooldown = simulation_state.chosen_buildings.size() / 7;
 
-        return *it;
+            auto it = std::next(simulation_state.chosen_buildings.begin(), k);
+            if (!last_modified[it->second] || last_modified[it->second] + cooldown < simulation_step)
+                return *it;
+        }
     }
 
 public:
@@ -123,10 +124,11 @@ public:
     {
         solve_greedy();
 
+        size_t simulation_step = 0;
         while (!is_timer_expired())
         {
             // Pick random building and delete it
-            const auto [construction_id, coords] = choose_random_building_id_and_coords();
+            const auto [construction_id, coords] = choose_random_building_id_and_coords(simulation_step);
             simulation_state.remove_building(coords, construction_id);
 
             // Find the building that would yield the highest score for this position
@@ -136,8 +138,13 @@ public:
             if (best_id == -1)
                 continue;
 
+            // Don't attempt an improvement on these coords for a while
+            last_modified[coords] = simulation_step;
+
             // Update building states
             simulation_state.add_building(coords, best_id, score_increase);
+
+            simulation_step++;
         }
 
         return get_processed_results();

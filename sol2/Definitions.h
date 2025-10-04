@@ -29,4 +29,5 @@ struct construction_ids_hash {
 };
 
 using CoordSet = std::unordered_set<Coords , coord_hash>;
+using CoordsToStep = std::unordered_map<Coords, size_t, coord_hash>;
 using ConstrIdSet = std::unordered_set<RealIdAndProjectId, construction_ids_hash>;

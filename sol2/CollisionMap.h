@@ -87,7 +87,6 @@ public:
     {
         occupant_id = std::vector<RealIdAndProjectId>(height * width, {EMPTY, 0});
         precompute_offsets();
-        std::cout << "Precomputed the offsets for every project.\n";
     }
 
     /// Returns true if the building project fits at the given point(top left corner)
