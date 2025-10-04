@@ -34,16 +34,15 @@ Builds on the first solution; a greedy solution is obtained(although now buildin
 
 ### Scoring
 
-| File Name              |      Score | Avg Utility Access | Coverage % |
-| ---------------------- | ---------: | -----------------: | ---------: |
-| a_example              |        100 |                2.0 |       71.4 |
-| b_short_walk           |  4,891,374 |                8.3 |       98.2 |
-| c_going_green          |  8,479,026 |               11.6 |       99.7 |
-| d_wide_selection       |  7,625,246 |               16.4 |       93.6 |
-| e_precise_fit          |  4,798,930 |                1.0 |       99.5 |
-| f_different_footprints |  7,020,472 |                5.9 |       99.9 |
-| **Final**              | 32,815,148 |                    |            |
-
+| File Name              |          Score | Avg Utility Access | Coverage % |
+| ---------------------- | -------------: | -----------------: | ---------: |
+| a_example              |            100 |                2.0 |       71.4 |
+| b_short_walk           |      4,895,099 |                8.3 |       98.3 |
+| c_going_green          |      8,440,605 |               11.7 |       99.7 |
+| d_wide_selection       |      7,897,054 |               16.4 |       95.3 |
+| e_precise_fit          |      4,789,890 |                1.0 |       99.4 |
+| f_different_footprints |      7,010,895 |                5.9 |       99.9 |
+| **Final**              | **33,033,643** |                    |            |
 
 ## Visualizer
 
